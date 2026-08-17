@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}My Registrations{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+  {% include 'includes/sidebar.html' %}
+  <div class="dashboard-main">
+    <h2 class="mb-4">My Registrations</h2>
+    <div class="glass-card p-4">
+      {% if registrations %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr><th>Event</th><th>Category</th><th>Date</th><th>Status</th><th class="text-end">Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for reg in registrations %}
+            <tr>
+              <td><a href="{{ reg.event.get_absolute_url }}">{{ reg.event.title }}</a></td>
+              <td>{% if reg.event.category %}{{ reg.event.category.name }}{% else %}—{% endif %}</td>
+              <td>{{ reg.event.start_date|date:"M d, Y" }}</td>
+              <td>
+                <span class="badge-soft {% if reg.status == 'confirmed' %}success{% elif reg.status == 'pending_payment' %}warning{% else %}danger{% endif %}">{{ reg.get_status_display }}</span>
+              </td>
+              <td class="text-end">
+                <a href="{{ reg.event.get_absolute_url }}" class="btn btn-sm btn-outline-light me-1" title="View"><i class="bi bi-eye"></i></a>
+                {% if reg.status == 'confirmed' %}
+                <a href="{% url 'events:event_cancel_registration' reg.event.slug %}" class="btn btn-sm btn-outline-light text-danger" title="Cancel"><i class="bi bi-x-circle"></i></a>
+                {% elif reg.status == 'pending_payment' %}
+                <a href="{% url 'events:event_detail' reg.event.slug %}" class="btn btn-sm btn-primary" title="Complete Payment">Pay Now</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-ticket-perforated d-block mb-3"></i>
+        <h5>No registrations yet</h5>
+        <p class="text-muted-custom">Browse events and register for the ones you like.</p>
+        <a href="{% url 'events:event_list' %}" class="btn btn-primary mt-2"><i class="bi bi-search me-2"></i>Browse Events</a>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if waitlist_entries %}
+    <h2 class="mb-4 mt-5">My Waitlists</h2>
+    <div class="glass-card p-4">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr><th>Event</th><th>Position</th><th>Status</th><th class="text-end">Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for entry in waitlist_entries %}
+            <tr>
+              <td><a href="{{ entry.event.get_absolute_url }}">{{ entry.event.title }}</a></td>
+              <td>#{{ entry.position }}</td>
+              <td>
+                {% if entry.status == 'notified' %}
+                  <span class="badge-soft warning">Seat available — register now</span>
+                {% else %}
+                  <span class="badge-soft">Waiting</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{{ entry.event.get_absolute_url }}" class="btn btn-sm btn-outline-light" title="View"><i class="bi bi-eye"></i></a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

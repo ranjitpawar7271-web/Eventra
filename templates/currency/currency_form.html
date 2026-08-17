@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}{% if is_edit %}Edit Currency{% else %}Add Currency{% endif %}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4">{% if is_edit %}Edit Currency{% else %}Add Currency{% endif %}</h3>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Code (ISO 4217)</label>
+              {{ form.code }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Symbol</label>
+              {{ form.symbol }}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            {{ form.name }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rate to Base (1 INR = ? this currency)</label>
+            {{ form.rate_to_base }}
+          </div>
+          <div class="form-check mb-4">
+            {{ form.is_base }}
+            <label class="form-check-label" for="{{ form.is_base.id_for_label }}">Base currency (only one should be set)</label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4">Save</button>
+            <a href="{% url 'currency:currency_list' %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

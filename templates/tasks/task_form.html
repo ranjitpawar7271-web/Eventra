@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}{% if is_edit %}Edit Task{% else %}Add Task{% endif %}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-1"><i class="bi bi-list-check me-2 text-info"></i>{% if is_edit %}Edit Task{% else %}Add Task{% endif %}</h3>
+        <p class="text-muted-custom mb-4">for <strong>{{ event.title }}</strong></p>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            {{ form.title }}
+            {% for error in form.title.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            {{ form.description }}
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Priority</label>
+              {{ form.priority }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Assigned To</label>
+              {{ form.assigned_to }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Due Date</label>
+              {{ form.due_date }}
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-2"></i>Save</button>
+            <a href="{% if task %}{% url 'tasks:task_detail' task.pk %}{% else %}{% url 'tasks:task_board' event.slug %}{% endif %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

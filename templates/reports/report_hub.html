@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Reports & Analytics{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+  {% include 'includes/sidebar.html' %}
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <div>
+        <h2 class="mb-1">Reports & Analytics</h2>
+        <p class="text-muted-custom mb-0">{% if is_system_wide %}System-wide, across all events{% else %}Scoped to the events you organize{% endif %}</p>
+      </div>
+      <a href="{% url 'reports:analytics_dashboard' %}" class="btn btn-primary"><i class="bi bi-graph-up me-2"></i>Analytics Dashboard</a>
+    </div>
+
+    <div class="row g-3">
+      {% for rt in report_types %}
+      <div class="col-md-6 col-xl-4">
+        <div class="glass-card p-4 h-100 d-flex flex-column">
+          <h5 class="mb-2">{{ rt.label }}</h5>
+          <div class="mt-auto pt-3">
+            <a href="{% url 'reports:report' rt.key %}" class="btn btn-outline-light btn-sm w-100 mb-2">
+              <i class="bi bi-eye me-1"></i>View {% if is_system_wide %}(All Events){% else %}(My Events){% endif %}
+            </a>
+            <div class="input-group input-group-sm">
+              <select class="form-select form-select-sm report-event-picker" data-report-key="{{ rt.key }}">
+                <option value="">Scope to one event…</option>
+                {% for e in events %}
+                <option value="{{ e.slug }}">{{ e.title }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-outline-light report-event-go" data-report-key="{{ rt.key }}" type="button"><i class="bi bi-arrow-right"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if not events %}
+    <div class="glass-card p-4 mt-4 text-center">
+      <p class="text-muted-custom mb-0">No events in scope yet — reports will fill in once events, registrations, and other module data exist.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.report-event-go').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var key = btn.getAttribute('data-report-key');
+      var select = document.querySelector('.report-event-picker[data-report-key="' + key + '"]');
+      if (select && select.value) {
+        window.location.href = '/reports/' + key + '/event/' + select.value + '/';
+      }
+    });
+  });
+</script>
+{% endblock %}

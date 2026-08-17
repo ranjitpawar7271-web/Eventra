@@ -1,0 +1,125 @@
+{% load static i18n %}
+<nav class="navbar navbar-expand-lg site-navbar sticky-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% url 'pages:home' %}">
+      <i class="bi bi-calendar-event-fill text-info"></i>
+      <span>Event<span class="text-info">ra</span></span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-1">
+        <li class="nav-item"><a class="nav-link {% if request.resolver_match.view_name == 'pages:home' %}active{% endif %}" href="{% url 'pages:home' %}">{% trans "Home" %}</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'events:event_list' %}">{% trans "Events" %}</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'categories:category_list' %}">{% trans "Categories" %}</a></li>
+        {% if user.is_authenticated %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'dashboard:dashboard' %}">{% trans "Dashboard" %}</a></li>
+        {% endif %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'pages:about' %}">{% trans "About" %}</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'pages:contact' %}">{% trans "Contact" %}</a></li>
+      </ul>
+
+      <div class="d-flex align-items-center gap-2">
+        <div class="dropdown">
+          <button class="btn btn-outline-light d-flex align-items-center gap-1" type="button" id="langSwitcherBtn" data-bs-toggle="dropdown" aria-expanded="false" title="{% trans 'Change language' %}">
+            <i class="bi bi-translate"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="langSwitcherBtn" style="background: var(--card); border: 1px solid var(--border); min-width: 160px;">
+            {% get_current_language as CURRENT_LANGUAGE %}
+            {% for lang_code, lang_name in LANGUAGES %}
+            <form method="post" action="{% url 'set_language' %}" class="m-0">
+              {% csrf_token %}
+              <input type="hidden" name="language" value="{{ lang_code }}">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="dropdown-item {% if lang_code == CURRENT_LANGUAGE %}active{% endif %}">{{ lang_name }}</button>
+            </form>
+            {% endfor %}
+          </div>
+        </div>
+        {% if available_currencies %}
+        <div class="dropdown">
+          <button class="btn btn-outline-light d-flex align-items-center gap-1" type="button" id="currencySwitcherBtn" data-bs-toggle="dropdown" aria-expanded="false" title="{% trans 'Change display currency' %}">
+            {{ active_currency.code }}
+          </button>
+          <div class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="currencySwitcherBtn" style="background: var(--card); border: 1px solid var(--border); min-width: 160px;">
+            {% for c in available_currencies %}
+            <form method="post" action="{% url 'currency:set_display_currency' %}" class="m-0">
+              {% csrf_token %}
+              <input type="hidden" name="currency" value="{{ c.code }}">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="dropdown-item {% if c.code == active_currency.code %}active{% endif %}">{{ c.code }} ({{ c.symbol }})</button>
+            </form>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <div class="dropdown">
+          <button class="btn btn-outline-light position-relative d-flex align-items-center" type="button" id="notifBellBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+            <i class="bi bi-bell"></i>
+            {% if nav_unread_count %}
+              <span class="badge rounded-pill bg-danger notif-bell-badge">{{ nav_unread_count }}</span>
+            {% endif %}
+          </button>
+          <div class="dropdown-menu dropdown-menu-end notif-dropdown p-0" aria-labelledby="notifBellBtn" style="background: var(--card); border: 1px solid var(--border);">
+            <div class="d-flex justify-content-between align-items-center px-3 py-2" style="border-bottom: 1px solid var(--border);">
+              <span class="fw-semibold small">Notifications</span>
+              <a href="{% url 'workflow:calendar' %}" class="small text-info text-decoration-none"><i class="bi bi-calendar3 me-1"></i>Calendar</a>
+            </div>
+            {% for n in nav_notifications %}
+              <a href="{% url 'workflow:notification_read' n.pk %}" class="notif-item {% if not n.is_read %}unread{% endif %}">
+                <i class="bi {{ n.icon }} mt-1"></i>
+                <span class="small">{{ n.message|truncatechars:70 }}<br><span class="text-muted" style="font-size:0.7rem;">{{ n.created_at|timesince }} ago</span></span>
+              </a>
+            {% empty %}
+              <p class="text-muted small text-center py-3 mb-0">No notifications yet.</p>
+            {% endfor %}
+            <a href="{% url 'workflow:notification_list' %}" class="d-block text-center small text-info py-2 text-decoration-none" style="border-top: 1px solid var(--border);">View all</a>
+          </div>
+        </div>
+        {% endif %}
+        <div class="dropdown">
+          <button class="btn btn-outline-light d-flex align-items-center" type="button" id="themeSwitcherBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Change theme">
+            <i class="bi bi-palette"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="themeSwitcherBtn" style="background: var(--card); border: 1px solid var(--border); min-width: 200px;">
+            <p class="theme-menu-label mb-2">Appearance</p>
+            <div class="theme-mode-group">
+              <button type="button" class="theme-mode-option" data-theme-option="light" onclick="setEventraTheme('light')"><i class="bi bi-sun"></i> Light</button>
+              <button type="button" class="theme-mode-option" data-theme-option="dark" onclick="setEventraTheme('dark')"><i class="bi bi-moon-stars"></i> Dark</button>
+              <button type="button" class="theme-mode-option" data-theme-option="system" onclick="setEventraTheme('system')"><i class="bi bi-circle-half"></i> System</button>
+            </div>
+          </div>
+        </div>
+        {% if user.is_authenticated %}
+          <div class="dropdown">
+            <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle"></i> {{ user.first_name|default:user.username }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" style="background: var(--card); border: 1px solid var(--border);">
+              <li><a class="dropdown-item" href="{% url 'users:profile' %}"><i class="bi bi-person me-2"></i>{% trans "Profile" %}</a></li>
+              <li><a class="dropdown-item" href="{% url 'dashboard:dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>{% trans "Dashboard" %}</a></li>
+              <li><a class="dropdown-item" href="{% url 'events:my_events' %}"><i class="bi bi-calendar-check me-2"></i>{% trans "My Events" %}</a></li>
+              <li><a class="dropdown-item" href="{% url 'workflow:calendar' %}"><i class="bi bi-calendar3 me-2"></i>{% trans "Calendar" %}</a></li>
+              {% if user.is_super_admin or user.is_staff_role %}
+              <li><a class="dropdown-item" href="{% url 'workflow:approval_list' %}"><i class="bi bi-clipboard-check me-2"></i>{% trans "Approvals" %}</a></li>
+              {% endif %}
+              <li><hr class="dropdown-divider" style="border-color: var(--border);"></li>
+              <li>
+                <form method="post" action="{% url 'users:logout' %}" class="m-0">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>{% trans "Logout" %}</button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        {% else %}
+          <a href="{% url 'users:login' %}" class="btn btn-outline-light">{% trans "Login" %}</a>
+          <a href="{% url 'users:signup' %}" class="btn btn-primary">{% trans "Sign Up" %}</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>

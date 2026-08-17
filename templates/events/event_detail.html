@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load i18n currency_tags %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'events:event_list' %}">Events</a></li>
+      <li class="breadcrumb-item active text-muted-custom">{{ event.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      {% if event.image %}
+        <img src="{{ event.image.url }}" class="event-detail-hero mb-4" alt="{{ event.title }}">
+      {% else %}
+        <div class="event-card-placeholder event-detail-hero mb-4" style="border-radius: var(--radius);"><i class="bi bi-calendar-event"></i></div>
+      {% endif %}
+
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        {% if event.category %}<span class="badge-soft">{{ event.category.name }}</span>{% endif %}
+        <span class="badge-soft {% if event.status == 'published' %}success{% elif event.status == 'cancelled' %}danger{% else %}accent{% endif %}">{{ event.get_status_display }}</span>
+        {% if event.average_rating %}
+        <a href="{% url 'reviews:event_reviews' event.slug %}" class="badge-soft text-decoration-none">
+          <i class="bi bi-star-fill text-warning me-1"></i>{{ event.average_rating }} ({{ event.review_count }} review{{ event.review_count|pluralize }})
+        </a>
+        {% endif %}
+      </div>
+      <h1 class="mb-3">{{ event.title }}</h1>
+      <div class="glass-card p-4 mb-4">
+        <h5 class="mb-3">About this Event</h5>
+        <p class="text-muted-custom mb-0" style="white-space: pre-line;">{{ event.description }}</p>
+      </div>
+
+      <div class="glass-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Reviews {% if event.review_count %}({{ event.review_count }}){% endif %}</h5>
+          <a href="{% url 'reviews:event_reviews' event.slug %}" class="btn btn-sm btn-outline-light">See All</a>
+        </div>
+        {% if can_review %}
+          <a href="{% url 'reviews:review_create' event.slug %}" class="btn btn-primary btn-sm mb-3"><i class="bi bi-star me-2"></i>Write a Review</a>
+        {% elif my_review %}
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge-soft warning"><i class="bi bi-star-fill me-1"></i>You rated this {{ my_review.rating }}/5</span>
+            <a href="{% url 'reviews:review_edit' my_review.pk %}" class="btn btn-sm btn-outline-light">Edit</a>
+          </div>
+        {% endif %}
+        {% if event.average_rating %}
+          <p class="text-muted-custom mb-0"><i class="bi bi-star-fill text-warning"></i> {{ event.average_rating }} average from {{ event.review_count }} review{{ event.review_count|pluralize }}</p>
+        {% else %}
+          <p class="text-muted-custom mb-0">No reviews yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4">
+        <h5 class="mb-3">Organized By</h5>
+        <div class="d-flex align-items-center gap-3">
+          <div class="icon-tile" style="border-radius: 50%;">{{ event.organizer.initials }}</div>
+          <div>
+            <p class="mb-0">{{ event.organizer.get_full_name|default:event.organizer.username }}</p>
+            <p class="text-muted-custom small mb-0">{{ event.organizer.email }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-images me-2"></i>Photo Gallery</h5>
+          <a href="{% url 'gallery:event_gallery' event.slug %}" class="btn btn-sm btn-outline-light">View Gallery</a>
+        </div>
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <h5 class="mb-3"><i class="bi bi-calendar-plus me-2"></i>Add to Calendar</h5>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="{{ google_calendar_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-light"><i class="bi bi-google me-2"></i>Google Calendar</a>
+          <a href="{% url 'events:event_ics' event.slug %}" class="btn btn-sm btn-outline-light"><i class="bi bi-download me-2"></i>Download .ics (Outlook, Apple Calendar)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      {% if can_view_budget %}
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-cash-coin text-info me-2"></i>Budget Summary</span></div>
+        {% if budget %}
+        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 divider-soft">
+          <span class="text-muted-custom">Estimated</span><span>₹{{ budget.estimated_budget }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 divider-soft">
+          <span class="text-muted-custom">Spent</span><span>₹{{ budget.total_expenses }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 divider-soft">
+          <span class="text-muted-custom">Revenue</span><span>₹{{ budget.total_revenue }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+          <span class="text-muted-custom">Variance</span>
+          <span class="badge-soft {% if budget.is_over_budget %}danger{% else %}success{% endif %}">
+            {% if budget.is_over_budget %}Over by ₹{{ budget.variance_abs }}{% else %}₹{{ budget.variance }} left{% endif %}
+          </span>
+        </div>
+        <a href="{% url 'budget:budget_detail' event.slug %}" class="btn btn-outline-light btn-sm w-100">View Full Budget</a>
+        {% else %}
+        <p class="text-muted-custom">No budget set up yet.</p>
+        <a href="{% url 'budget:budget_setup' event.slug %}" class="btn btn-outline-light btn-sm w-100">Set Up Budget</a>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-award text-info me-2"></i>Sponsors</span></div>
+        {% if sponsorships %}
+          {% for deal in sponsorships %}
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 divider-soft">
+            <div>
+              <a href="{{ deal.sponsor.get_absolute_url }}" class="text-reset">{{ deal.sponsor.company_name }}</a>
+              <div class="text-muted-custom small">{{ deal.get_package_display }} · ₹{{ deal.amount }}</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              {% if user.is_super_admin or user.is_staff_role %}
+              <form method="post" action="{% url 'sponsors:event_sponsorship_status_update' deal.pk %}" class="d-flex">
+                {% csrf_token %}
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                  {% for value, label in deal.STATUS_CHOICES %}
+                  <option value="{{ value }}" {% if value == deal.status %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+              {% else %}
+              <span class="badge-soft {% if deal.status == 'paid' %}success{% elif deal.status == 'confirmed' %}accent{% elif deal.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                {{ deal.get_status_display }}
+              </span>
+              {% endif %}
+              <a href="{% url 'sponsors:event_sponsorship_delete' deal.pk %}" class="text-danger" title="Remove"><i class="bi bi-trash"></i></a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted-custom">No sponsors attached yet.</p>
+        {% endif %}
+        <a href="{% url 'sponsors:event_sponsorship_create' event.slug %}" class="btn btn-outline-light btn-sm w-100 mt-2">Add Sponsor</a>
+      </div>
+
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-kanban text-info me-2"></i>Task Board</span></div>
+        <p class="text-muted-custom small">Checklist, assignments, and progress tracking for this event.</p>
+        {% if event.preparation_progress is not None %}
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small text-muted-custom">Preparation Progress</span>
+          <span class="small fw-bold">{{ event.preparation_progress }}%</span>
+        </div>
+        <div class="seats-progress mb-3">
+          <div class="seats-progress-bar" style="width: {{ event.preparation_progress }}%;"></div>
+        </div>
+        {% endif %}
+        <a href="{% url 'tasks:task_board' event.slug %}" class="btn btn-outline-light btn-sm w-100">Open Task Board</a>
+      </div>
+
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-award text-info me-2"></i>Certificates</span></div>
+        <p class="text-muted-custom small">Issue certificates or badges to attendees who checked in.</p>
+        <a href="{% url 'certificates:certificate_hub' event.slug %}" class="btn btn-outline-light btn-sm w-100">Manage Certificates</a>
+      </div>
+      {% endif %}
+
+      {% if can_view_budget or is_registered %}
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-clipboard2-check text-info me-2"></i>Polls & Feedback</span></div>
+        <p class="text-muted-custom small">{% if can_view_budget %}Create polls, collect feedback, and view results.{% else %}Share your feedback or take part in a live poll.{% endif %}</p>
+        <a href="{% url 'surveys:survey_list' event.slug %}" class="btn btn-outline-light btn-sm w-100">{% if can_view_budget %}Manage Surveys{% else %}View Surveys{% endif %}</a>
+      </div>
+
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-chat-dots text-info me-2"></i>Chat & Announcements</span></div>
+        <p class="text-muted-custom small">{% if can_view_budget %}Post announcements and chat with attendees.{% else %}Chat with other attendees and see announcements.{% endif %}</p>
+        <a href="{% url 'chat:event_chat' event.slug %}" class="btn btn-outline-light btn-sm w-100">Open Chat</a>
+      </div>
+      {% endif %}
+      <div class="glass-card p-4 mb-4" style="position: sticky; top: 90px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="fs-4 fw-bold">{% if event.is_free %}{% trans "Free" %}{% else %}{% display_price event.price %}{% endif %}</span>
+          <div class="d-flex align-items-center gap-2">
+            {% if event.is_full %}<span class="badge-soft danger">Sold Out</span>{% endif %}
+            {% if user.is_authenticated %}
+            <form method="post" action="{% url 'wishlist:toggle_favorite' event.slug %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}">
+              <button type="submit" class="btn btn-sm btn-outline-light" style="border-radius: 50%; width: 36px; height: 36px; padding: 0;" title="{% if is_favorited %}Remove from wishlist{% else %}Add to wishlist{% endif %}">
+                <i class="bi {% if is_favorited %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="event-meta"><i class="bi bi-calendar3"></i> {{ event.start_date|date:"M d, Y - g:i A" }} to {{ event.end_date|date:"M d, Y - g:i A" }}</div>
+        <div class="event-meta"><i class="bi bi-geo-alt"></i> {{ event.location }}</div>
+        {% if event.venue %}
+        <div class="event-meta"><i class="bi bi-building"></i> <a href="{{ event.venue.get_absolute_url }}" class="text-reset">{{ event.venue.name }}</a> (capacity {{ event.venue.capacity }})</div>
+        <div class="event-meta"><i class="bi bi-signpost"></i> {{ event.venue.address }}, {{ event.venue.city }}</div>
+        {% endif %}
+        <div class="event-meta">
+          <a href="{{ event.map_url }}" target="_blank" rel="noopener" class="text-decoration-none">
+            <i class="bi bi-map"></i> Open in Google Maps
+          </a>
+        </div>
+        <div class="event-meta"><i class="bi bi-people"></i> {{ event.seats_taken }} / {{ event.capacity }} registered</div>
+
+        <div class="seats-progress my-3">
+          <div class="seats-progress-bar" style="width: {% widthratio event.seats_taken event.capacity 100 %}%;"></div>
+        </div>
+
+        {% if user.is_authenticated %}
+          {% if is_registered %}
+            <form method="post" action="{% url 'events:event_cancel_registration' event.slug %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger w-100"><i class="bi bi-x-circle me-2"></i>Cancel Registration</button>
+            </form>
+          {% elif pending_payment %}
+            <div class="alert alert-warning py-2 px-3 mb-2">Registration started — payment pending.</div>
+            <a href="{% url 'payments:checkout' pending_payment.id %}" class="btn btn-primary w-100"><i class="bi bi-credit-card me-2"></i>Complete Payment</a>
+          {% elif event.is_full %}
+            <button class="btn btn-outline-light w-100 mb-2" disabled><i class="bi bi-x-octagon me-2"></i>Event Full</button>
+            {% if waitlist_entry %}
+              {% if waitlist_entry.status == 'notified' %}
+                <div class="alert alert-success py-2 px-3 mb-2">A seat opened up! Register before your invite expires.</div>
+                <form method="post" action="{% url 'events:event_register' event.slug %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-primary w-100"><i class="bi bi-ticket-perforated me-2"></i>Claim Your Seat</button>
+                </form>
+              {% else %}
+                <div class="alert alert-info py-2 px-3 mb-2">Your position: #{{ waitlist_entry.position }}</div>
+                <form method="post" action="{% url 'events:leave_waitlist' event.slug %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-light w-100 btn-sm">Leave Waitlist</button>
+                </form>
+              {% endif %}
+            {% else %}
+              <form method="post" action="{% url 'events:join_waitlist' event.slug %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-hourglass-split me-2"></i>Join Waitlist{% if waitlist_count %} ({{ waitlist_count }} waiting){% endif %}</button>
+              </form>
+            {% endif %}
+          {% else %}
+            <form method="post" action="{% url 'events:event_register' event.slug %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary w-100"><i class="bi bi-ticket-perforated me-2"></i>{% if event.is_free %}Register Now{% else %}Register & Pay{% endif %}</button>
+            </form>
+          {% endif %}
+        {% else %}
+          <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right me-2"></i>Login to Register</a>
+        {% endif %}
+
+        {% if user == event.organizer or user.is_staff %}
+        <hr class="divider-soft">
+        <div class="d-grid gap-2">
+          <a href="{% url 'events:event_participants' event.slug %}" class="btn btn-outline-light"><i class="bi bi-people me-2"></i>View Participants</a>
+          {% if waitlist_count %}
+          <a href="{% url 'events:waitlist_manage' event.slug %}" class="btn btn-outline-light"><i class="bi bi-hourglass-split me-2"></i>Manage Waitlist ({{ waitlist_count }})</a>
+          {% endif %}
+          {% if not event.is_free %}
+          <a href="{% url 'payments:event_payments' event.slug %}" class="btn btn-outline-light"><i class="bi bi-cash-coin me-2"></i>View Payments</a>
+          {% endif %}
+          <a href="{% url 'tickets:scanner' event.slug %}" class="btn btn-outline-light"><i class="bi bi-upc-scan me-2"></i>Scan Tickets (Check-in)</a>
+          <a href="{% url 'tickets:checkin_logs' event.slug %}" class="btn btn-outline-light"><i class="bi bi-clipboard-data me-2"></i>Attendance Report</a>
+          <a href="{% url 'events:event_update' event.slug %}" class="btn btn-outline-light"><i class="bi bi-pencil me-2"></i>Edit Event</a>
+          <a href="{% url 'events:event_delete' event.slug %}" class="btn btn-outline-light text-danger"><i class="bi bi-trash me-2"></i>Delete Event</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

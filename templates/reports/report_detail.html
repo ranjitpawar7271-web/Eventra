@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}{{ report.title }}{% endblock %}
+{% block content %}
+{% if event %}
+  {% url 'reports:report_for_event' report_type event.slug as base_url %}
+{% else %}
+  {% url 'reports:report' report_type as base_url %}
+{% endif %}
+<div class="dashboard-layout">
+  {% include 'includes/sidebar.html' %}
+  <div class="dashboard-main">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'reports:report_hub' %}">Reports</a></li>
+        <li class="breadcrumb-item active text-muted-custom">{{ report_label }}</li>
+      </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+      <div>
+        <h2 class="mb-1">{{ report.title }}</h2>
+        <p class="text-muted-custom mb-0">{{ report.subtitle }}</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ base_url }}?format=csv" class="btn btn-outline-light btn-sm"><i class="bi bi-filetype-csv me-1"></i>CSV</a>
+        <a href="{{ base_url }}?format=xlsx" class="btn btn-outline-light btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
+        <a href="{{ base_url }}?format=pdf" class="btn btn-outline-light btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+      </div>
+    </div>
+
+    <div class="glass-card p-3 mb-4">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-sm-6 col-md-4">
+          <label class="form-label small text-muted-custom mb-1">Event scope</label>
+          <select class="form-select form-select-sm" onchange="if(this.value){window.location.href='/reports/{{ report_type }}/event/'+this.value+'/';}else{window.location.href='/reports/{{ report_type }}/';}">
+            <option value=""{% if not event %} selected{% endif %}>All Events</option>
+            {% for e in events %}
+            <option value="{{ e.slug }}"{% if event and event.slug == e.slug %} selected{% endif %}>{{ e.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if report_type == 'resource_utilization' %}
+        <div class="col-sm-3 col-md-2">
+          <label class="form-label small text-muted-custom mb-1">From</label>
+          <input type="date" name="start" class="form-control form-control-sm" value="{{ request.GET.start }}">
+        </div>
+        <div class="col-sm-3 col-md-2">
+          <label class="form-label small text-muted-custom mb-1">To</label>
+          <input type="date" name="end" class="form-control form-control-sm" value="{{ request.GET.end }}">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-outline-light btn-sm w-100">Apply</button>
+        </div>
+        {% endif %}
+      </form>
+    </div>
+
+    {% if report.summary %}
+    <div class="row g-3 mb-4">
+      {% for label, value in report.summary %}
+      <div class="col-sm-6 col-xl-3">
+        <div class="glass-card dashboard-stat-card">
+          <div><p class="stat-value">{{ value }}</p><p class="stat-label">{{ label }}</p></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="glass-card p-4">
+      {% if report.rows %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>{% for col in report.columns %}<th>{{ col }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+            {% for row in report.rows %}
+            <tr>
+              {% for cell in row %}
+              <td>{% if forloop.counter0 in report.currency_columns %}₹{{ cell }}{% else %}{{ cell }}{% endif %}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-bar-chart d-block mb-3"></i>
+        <h5>No data yet</h5>
+        <p class="text-muted-custom mb-0">This report will fill in once there's activity to report on.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

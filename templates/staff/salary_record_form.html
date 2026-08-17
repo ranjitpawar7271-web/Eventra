@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Add Salary Record{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4"><i class="bi bi-cash-coin me-2 text-info"></i>Salary Record — {{ profile.user.username }}</h3>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Period Start</label>
+              {{ form.period_start }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Period End</label>
+              {{ form.period_end }}
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Basic Amount (₹)</label>
+              {{ form.basic_amount }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Bonus (₹)</label>
+              {{ form.bonus }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Deductions (₹)</label>
+              {{ form.deductions }}
+            </div>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Status</label>
+              {{ form.status }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Payment Date <span class="text-muted-custom small">(optional)</span></label>
+              {{ form.payment_date }}
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-2"></i>Save Record</button>
+            <a href="{% url 'staff:staff_detail' profile.pk %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

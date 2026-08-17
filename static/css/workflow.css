@@ -1,0 +1,166 @@
+/* Module 9 — Calendar & notification styling. Reuses the theme CSS
+   variables (--card, --border, --text-muted, etc.) defined in
+   themes.css so it follows whichever theme the user has picked. */
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.cal-grid-header {
+  margin-bottom: 10px;
+}
+
+.cal-head {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cal-cell {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-height: 92px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cal-cell-tall {
+  min-height: 220px;
+}
+
+.cal-cell-blank {
+  background: transparent;
+  border: none;
+}
+
+.cal-today {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary) inset;
+}
+
+.cal-date {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.cal-today .cal-date {
+  color: var(--primary);
+}
+
+.cal-item {
+  display: block;
+  font-size: 0.72rem;
+  padding: 2px 5px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--card);
+  border-left: 3px solid var(--secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-item:hover {
+  background: var(--card-hover);
+  color: var(--text);
+}
+
+.cal-item-time {
+  color: var(--text-muted);
+  margin-right: 3px;
+}
+
+.cal-item-event { border-left-color: var(--primary); }
+.cal-item-booking { border-left-color: var(--accent); }
+.cal-item-shift { border-left-color: var(--success); }
+.cal-item-task { border-left-color: var(--warning, #f0ad4e); }
+
+.cal-more {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.cal-agenda {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cal-agenda-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--secondary);
+  text-decoration: none;
+  color: var(--text);
+}
+
+.cal-agenda-item.cal-item-event { border-left-color: var(--primary); }
+.cal-agenda-item.cal-item-booking { border-left-color: var(--accent); }
+.cal-agenda-item.cal-item-shift { border-left-color: var(--success); }
+.cal-agenda-item.cal-item-task { border-left-color: var(--warning, #f0ad4e); }
+
+.cal-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 4px;
+  background: var(--secondary);
+}
+
+.cal-dot.cal-item-event { background: var(--primary); }
+.cal-dot.cal-item-booking { background: var(--accent); }
+.cal-dot.cal-item-shift { background: var(--success); }
+.cal-dot.cal-item-task { background: var(--warning, #f0ad4e); }
+
+/* Notification bell dropdown */
+.notif-dropdown {
+  min-width: 340px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.notif-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.notif-item:hover {
+  background: var(--card-hover);
+  color: var(--text);
+}
+
+.notif-item.unread {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.notif-bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.6rem;
+  padding: 2px 5px;
+}

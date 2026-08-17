@@ -1,0 +1,51 @@
+{% load static %}
+<div id="eventra-chatbot-root">
+  <button id="chatbot-toggle-btn" type="button" aria-label="Open Eventra Assistant">
+    <i class="bi bi-robot"></i>
+  </button>
+
+  <div id="chatbot-panel" class="d-none">
+    <div id="chatbot-header">
+      <div>
+        <strong>Eventra Assistant</strong> <span aria-hidden="true">🤖</span>
+        <div class="small opacity-75">Ask about events, tickets, and more</div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" id="chatbot-clear-btn" class="btn-icon" title="Clear chat" aria-label="Clear chat">
+          <i class="bi bi-trash"></i>
+        </button>
+        <button type="button" id="chatbot-close-btn" class="btn-icon" title="Close" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="chatbot-suggestions">
+      <button type="button" class="chip" data-question="What events are upcoming?">Upcoming events</button>
+      <button type="button" class="chip" data-question="Show my registrations">My registrations</button>
+      <button type="button" class="chip" data-question="Where is my ticket?">Find my ticket</button>
+      <button type="button" class="chip" data-question="How do I get my certificate?">My certificate</button>
+      {% if user.can_manage_events %}
+      <button type="button" class="chip" data-question="How many participants registered?">Registrations (org)</button>
+      <button type="button" class="chip" data-question="What is today's attendance?">Today's attendance</button>
+      <button type="button" class="chip" data-question="What is my event revenue?">Revenue</button>
+      {% endif %}
+    </div>
+
+    <div id="chatbot-messages" aria-live="polite"></div>
+
+    <div id="chatbot-error" class="d-none"></div>
+
+    <form id="chatbot-form">
+      <input type="text" id="chatbot-input" placeholder="Ask about events, tickets, certificates..." maxlength="1000" autocomplete="off">
+      <button type="submit" id="chatbot-send-btn" aria-label="Send">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  window.EVENTRA_CHATBOT = { sendUrl: "{% url 'chatbot:send_message' %}" };
+</script>
+<script src="{% static 'js/chatbot-widget.js' %}"></script>

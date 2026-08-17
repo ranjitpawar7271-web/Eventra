@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container hero-content">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-6">
+        <span class="badge-soft mb-3 d-inline-block"><i class="bi bi-stars me-1"></i>Plan smarter, gather better</span>
+        <h1 class="display-5 fw-bold mb-3">Discover &amp; Manage Events with <span class="text-info">Eventra</span></h1>
+        <p class="fs-5 text-muted-custom mb-4">A modern platform to create, promote, and manage events of every kind — from tech meetups to music festivals — all in one dashboard.</p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{% url 'events:event_list' %}" class="btn btn-primary btn-lg"><i class="bi bi-search me-2"></i>Browse Events</a>
+          <a href="{% url 'events:event_create' %}" class="btn btn-outline-light btn-lg"><i class="bi bi-plus-circle me-2"></i>Create an Event</a>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="glass-card p-4">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="card-flat stat-card">
+                <i class="bi bi-calendar2-week"></i>
+                <h3>{{ total_events }}</h3>
+                <p class="text-muted-custom mb-0">Live Events</p>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="card-flat stat-card">
+                <i class="bi bi-tags"></i>
+                <h3>{{ total_categories }}</h3>
+                <p class="text-muted-custom mb-0">Categories</p>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="card-flat p-4 d-flex align-items-center gap-3">
+                <div class="icon-tile"><i class="bi bi-shield-check"></i></div>
+                <div>
+                  <h6 class="mb-1">Secure &amp; Reliable</h6>
+                  <p class="text-muted-custom mb-0 small">Manage registrations with confidence.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-sm">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h2 class="mb-0">Browse by Category</h2>
+      <a href="{% url 'categories:category_list' %}" class="text-info">View all <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row g-3">
+      {% for category in categories %}
+      <div class="col-6 col-md-3">
+        <a href="{% url 'events:event_list' %}?category={{ category.slug }}" class="category-chip w-100">
+          <i class="bi {{ category.icon }}"></i>
+          <span>{{ category.name }}</span>
+        </a>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <p class="text-muted-custom">No categories yet. <a href="{% url 'categories:category_create' %}">Add the first one</a>.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h2 class="mb-0">Upcoming Events</h2>
+      <a href="{% url 'events:event_list' %}" class="text-info">View all <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row g-4">
+      {% for event in upcoming_events %}
+      <div class="col-md-6 col-lg-4">
+        <div class="glass-card event-card h-100">
+          {% if event.image %}
+            <img src="{{ event.image.url }}" class="event-card-image" alt="{{ event.title }}">
+          {% else %}
+            <div class="event-card-placeholder"><i class="bi bi-calendar-event"></i></div>
+          {% endif %}
+          <div class="event-card-body">
+            {% if event.category %}<span class="badge-soft mb-2 d-inline-block">{{ event.category.name }}</span>{% endif %}
+            <h5 class="mb-2"><a href="{{ event.get_absolute_url }}" class="text-reset">{{ event.title }}</a></h5>
+            <div class="event-meta"><i class="bi bi-calendar3"></i> {{ event.start_date|date:"M d, Y - g:i A" }}</div>
+            <div class="event-meta"><i class="bi bi-geo-alt"></i> {{ event.location }}</div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span class="fw-semibold">{% if event.is_free %}Free{% else %}₹{{ event.price }}{% endif %}</span>
+              <a href="{{ event.get_absolute_url }}" class="btn btn-sm btn-outline-light">Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <div class="empty-state">
+          <i class="bi bi-calendar-x d-block mb-3"></i>
+          <p class="text-muted-custom">No upcoming events right now. Check back soon!</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section-sm">
+  <div class="container">
+    <div class="glass-card p-5 text-center">
+      <h2 class="mb-2">Ready to host your own event?</h2>
+      <p class="text-muted-custom mb-4">It only takes a couple of minutes to get started.</p>
+      <a href="{% url 'events:event_create' %}" class="btn btn-primary btn-lg"><i class="bi bi-plus-circle me-2"></i>Create Your Event</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

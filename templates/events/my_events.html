@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}My Events{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+  {% include 'includes/sidebar.html' %}
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <h2 class="mb-0">My Events</h2>
+      <a href="{% url 'events:event_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Create Event</a>
+    </div>
+
+    <div class="glass-card p-4">
+      {% if events %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Title</th><th>Category</th><th>Date</th><th>Status</th><th>Registrations</th><th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+            <tr>
+              <td><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></td>
+              <td>{% if event.category %}{{ event.category.name }}{% else %}—{% endif %}</td>
+              <td>{{ event.start_date|date:"M d, Y" }}</td>
+              <td><span class="badge-soft {% if event.status == 'published' %}success{% elif event.status == 'cancelled' %}danger{% else %}accent{% endif %}">{{ event.get_status_display }}</span></td>
+              <td>{{ event.seats_taken }}/{{ event.capacity }}</td>
+              <td class="text-end">
+                <a href="{{ event.get_absolute_url }}" class="btn btn-sm btn-outline-light me-1" title="View"><i class="bi bi-eye"></i></a>
+                <a href="{% url 'events:event_participants' event.slug %}" class="btn btn-sm btn-outline-light me-1" title="Participants"><i class="bi bi-people"></i></a>
+                <a href="{% url 'events:event_update' event.slug %}" class="btn btn-sm btn-outline-light me-1" title="Edit"><i class="bi bi-pencil"></i></a>
+                <a href="{% url 'events:event_delete' event.slug %}" class="btn btn-sm btn-outline-light text-danger" title="Delete"><i class="bi bi-trash"></i></a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-calendar-x d-block mb-3"></i>
+        <h5>You haven't created any events yet</h5>
+        <p class="text-muted-custom">Start organizing your first event today.</p>
+        <a href="{% url 'events:event_create' %}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle me-2"></i>Create Event</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

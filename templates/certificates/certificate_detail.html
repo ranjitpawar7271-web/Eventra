@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ certificate.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="glass-card p-4 p-md-5 text-center">
+        {% if certificate.revoked %}
+        <span class="badge-soft danger mb-3">Revoked</span>
+        {% endif %}
+        <div class="icon-tile mx-auto mb-3"><i class="bi bi-award"></i></div>
+        <h6 class="text-muted-custom text-uppercase small mb-1">{{ certificate.get_cert_type_display }}</h6>
+        <h2 class="mb-3">{{ certificate.title }}</h2>
+        <p class="text-muted-custom mb-1">Presented to</p>
+        <h4 class="mb-3">{{ certificate.participant.get_full_name|default:certificate.participant.username }}</h4>
+        <p class="text-muted-custom mb-1">for {{ certificate.event.title }}</p>
+        <p class="text-muted-custom small mb-4">Issued {{ certificate.issued_at|date:"F d, Y" }} · No. {{ certificate.certificate_code }}</p>
+
+        <img src="{% url 'certificates:certificate_qr' certificate.certificate_code %}" alt="Verification QR" style="width: 140px; height: 140px;" class="mb-3">
+        <p class="text-muted-custom small mb-4">Scan to verify authenticity</p>
+
+        <a href="{% url 'certificates:certificate_pdf' certificate.certificate_code %}" class="btn btn-primary px-4"><i class="bi bi-download me-2"></i>Download PDF</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="glass-card auth-card">
+    <div class="text-center">
+      <div class="icon-tile mx-auto"><i class="bi bi-person-plus"></i></div>
+      <h2 class="auth-title">Create Your Account</h2>
+      <p class="auth-subtitle">Join Eventra and start hosting or attending events.</p>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <div class="form-floating">
+            {{ form.first_name }}
+            <label for="{{ form.first_name.id_for_label }}"><i class="bi bi-person me-1"></i>First Name</label>
+          </div>
+          {% for error in form.first_name.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-6">
+          <div class="form-floating">
+            {{ form.last_name }}
+            <label for="{{ form.last_name.id_for_label }}"><i class="bi bi-person me-1"></i>Last Name</label>
+          </div>
+          {% for error in form.last_name.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+        </div>
+      </div>
+      <div class="form-floating mb-3">
+        {{ form.username }}
+        <label for="{{ form.username.id_for_label }}"><i class="bi bi-at me-1"></i>Username</label>
+        {% for error in form.username.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="form-floating mb-3">
+        {{ form.email }}
+        <label for="{{ form.email.id_for_label }}"><i class="bi bi-envelope me-1"></i>Email address</label>
+        {% for error in form.email.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="form-floating mb-3">
+        {{ form.role }}
+        <label for="{{ form.role.id_for_label }}"><i class="bi bi-person-badge me-1"></i>I am joining as a...</label>
+        {% if form.role.help_text %}<div class="form-text small">{{ form.role.help_text }}</div>{% endif %}
+        {% for error in form.role.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="form-floating mb-3">
+        {{ form.password1 }}
+        <label for="{{ form.password1.id_for_label }}"><i class="bi bi-lock me-1"></i>Password</label>
+        {% for error in form.password1.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="form-floating mb-3">
+        {{ form.password2 }}
+        <label for="{{ form.password2.id_for_label }}"><i class="bi bi-lock-fill me-1"></i>Confirm Password</label>
+        {% for error in form.password2.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary w-100 py-2"><i class="bi bi-person-plus me-2"></i>Create Account</button>
+    </form>
+    <p class="auth-footer-text">Already have an account? <a href="{% url 'users:login' %}">Login</a></p>
+  </div>
+</div>
+{% endblock %}

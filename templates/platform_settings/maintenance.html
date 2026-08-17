@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Under Maintenance{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="glass-card p-4 p-md-5 text-center">
+        <div class="icon-tile mx-auto mb-3"><i class="bi bi-tools"></i></div>
+        <h3 class="mb-3">We'll be right back</h3>
+        <p class="text-muted-custom mb-0">{{ message }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

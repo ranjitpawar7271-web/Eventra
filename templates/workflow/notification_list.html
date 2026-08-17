@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width: 760px;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0"><i class="bi bi-bell text-info me-2"></i>Notifications</h2>
+    {% if notifications %}
+    <form method="post" action="{% url 'workflow:notifications_mark_all_read' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'workflow:notification_list' %}">
+      <button type="submit" class="btn btn-outline-light btn-sm">Mark all as read</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="glass-card p-2">
+    {% if notifications %}
+      <ul class="list-unstyled mb-0">
+        {% for n in notifications %}
+          <li>
+            <a href="{% url 'workflow:notification_read' n.pk %}" class="d-flex align-items-start gap-3 p-3 text-decoration-none" style="border-bottom: 1px solid var(--border); {% if not n.is_read %}background: var(--card-hover);{% endif %}">
+              <i class="bi {{ n.icon }} fs-5 {% if n.priority == 'urgent' %}text-danger{% elif n.priority == 'high' %}text-warning{% else %}text-info{% endif %} mt-1"></i>
+              <div class="flex-grow-1">
+                <p class="mb-1 {% if not n.is_read %}fw-semibold{% endif %}" style="color: var(--text);">{{ n.message }}</p>
+                <span class="text-muted small">{{ n.created_at|date:"M d, Y H:i" }} &middot; {{ n.get_notification_type_display }}{% if n.related_event %} &middot; <a href="{{ n.related_event.get_absolute_url }}" class="text-info">{{ n.related_event.title }}</a>{% endif %}</span>
+              </div>
+              {% if n.priority == 'urgent' %}<span class="badge bg-danger align-self-center">Urgent</span>
+              {% elif n.priority == 'high' %}<span class="badge bg-warning text-dark align-self-center">High</span>
+              {% elif not n.is_read %}<span class="badge bg-info align-self-center">New</span>{% endif %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted text-center py-4 mb-0">You're all caught up.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

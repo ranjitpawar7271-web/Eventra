@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}My Certificates{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container text-center">
+    <h1>My Certificates</h1>
+    <p class="text-muted-custom fs-5">Certificates and badges you've earned.</p>
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="row g-4">
+    {% for cert in certificates %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card p-4 h-100 d-flex flex-column text-center">
+        <div class="icon-tile mx-auto mb-3"><i class="bi bi-award"></i></div>
+        <span class="badge-soft {% if cert.cert_type == 'badge' %}accent{% else %}success{% endif %} align-self-center mb-2">{{ cert.get_cert_type_display }}</span>
+        <h5>{{ cert.title }}</h5>
+        <p class="text-muted-custom small">{{ cert.event.title }}</p>
+        <p class="text-muted-custom small mt-auto">{{ cert.issued_at|date:"M d, Y" }}</p>
+        <a href="{{ cert.get_absolute_url }}" class="btn btn-outline-light btn-sm">View Certificate</a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-award d-block mb-3"></i>
+        <h5>No certificates yet</h5>
+        <p class="text-muted-custom mb-0">Attend an event and check in — a certificate may be issued afterward.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

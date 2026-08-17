@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}{{ vendor.company_name }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div class="d-flex align-items-center gap-3">
+            {% if vendor.logo %}<img src="{{ vendor.logo.url }}" class="rounded" style="width:64px;height:64px;object-fit:cover;" alt="">{% endif %}
+            <div>
+              <span class="badge-soft mb-1 d-inline-block">{{ vendor.get_service_type_display }}</span>
+              <h2 class="mb-0">{{ vendor.company_name }}</h2>
+            </div>
+          </div>
+          <span class="badge-soft {% if vendor.status == 'approved' %}success{% elif vendor.status == 'rejected' or vendor.status == 'suspended' %}danger{% else %}warning{% endif %}">
+            {{ vendor.get_status_display }}
+          </span>
+        </div>
+
+        <div class="row g-3 my-2">
+          <div class="col-sm-4">
+            <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-star-fill"></i></div>
+              <div><p class="stat-value">{{ vendor.performance_score|default:"—" }}</p><p class="stat-label">Performance Score</p></div></div>
+          </div>
+          <div class="col-sm-4">
+            <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-hand-thumbs-up"></i></div>
+              <div><p class="stat-value">{{ vendor.avg_service_quality|floatformat:1|default:"—" }}</p><p class="stat-label">Service Quality</p></div></div>
+          </div>
+          <div class="col-sm-4">
+            <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-clock-history"></i></div>
+              <div><p class="stat-value">{{ vendor.avg_delivery_time|floatformat:1|default:"—" }}</p><p class="stat-label">Delivery Time</p></div></div>
+          </div>
+        </div>
+
+        <p class="mt-3">{{ vendor.description|default:"No description provided." }}</p>
+        {% if vendor.contact_person or vendor.phone_number %}
+        <div class="event-meta"><i class="bi bi-person"></i> {{ vendor.contact_person }} {% if vendor.phone_number %}· {{ vendor.phone_number }}{% endif %}</div>
+        {% endif %}
+        {% if vendor.address %}
+        <div class="event-meta"><i class="bi bi-geo-alt"></i> {{ vendor.address }}</div>
+        {% endif %}
+
+        <div class="d-flex gap-2 flex-wrap mt-4">
+          {% if is_owner %}
+          <a href="{% url 'vendors:vendor_profile_edit' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-pencil me-1"></i>Edit Profile</a>
+          <a href="{% url 'vendors:vendor_service_create' vendor.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-plus-circle me-1"></i>Add Service</a>
+          <a href="{% url 'vendors:vendor_document_upload' vendor.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-upload me-1"></i>Upload Document</a>
+          {% endif %}
+          {% if can_manage %}
+          {% if vendor.status != 'approved' %}
+          <form method="post" action="{% url 'vendors:vendor_approve' vendor.slug %}" class="d-inline">{% csrf_token %}<button class="btn btn-success btn-sm"><i class="bi bi-check-circle me-1"></i>Approve</button></form>
+          {% endif %}
+          {% if vendor.status != 'rejected' %}
+          <form method="post" action="{% url 'vendors:vendor_reject' vendor.slug %}" class="d-inline">{% csrf_token %}<button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle me-1"></i>Reject</button></form>
+          {% endif %}
+          {% if vendor.status == 'approved' %}
+          <form method="post" action="{% url 'vendors:vendor_suspend' vendor.slug %}" class="d-inline">{% csrf_token %}<button class="btn btn-outline-warning btn-sm"><i class="bi bi-pause-circle me-1"></i>Suspend</button></form>
+          {% endif %}
+          {% endif %}
+          {% if can_create_contract %}
+          <a href="{% url 'vendors:vendor_contract_create' vendor.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-file-earmark-text me-1"></i>New Contract</a>
+          <a href="{% url 'vendors:vendor_rating_create' vendor.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-star me-1"></i>Rate Vendor</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-bag-check text-info me-2"></i>Services</span></div>
+        {% if services %}
+        <div class="row g-3">
+          {% for service in services %}
+          <div class="col-md-6">
+            <div class="glass-card p-3">
+              <h6 class="mb-1">{{ service.name }}</h6>
+              <p class="text-muted-custom small mb-1">{{ service.description|truncatechars:80 }}</p>
+              <p class="mb-0">₹{{ service.price }} <span class="text-muted-custom small">({{ service.get_price_unit_display }})</span></p>
+              {% if is_owner or can_manage %}
+              <form method="post" action="{% url 'vendors:vendor_service_delete' service.pk %}" class="mt-2" onsubmit="return confirm('Remove this service?');">
+                {% csrf_token %}<button class="btn btn-sm btn-outline-danger">Remove</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted-custom mb-0">No services listed yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-chat-square-text text-info me-2"></i>Ratings & Reviews</span></div>
+        {% if ratings %}
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+          {% for rating in ratings %}
+          <li class="border-bottom pb-2 divider-soft">
+            <p class="mb-1">Quality: {{ rating.service_quality }}/5 · Delivery: {{ rating.delivery_time }}/5{% if rating.event %} — {{ rating.event.title }}{% endif %}</p>
+            {% if rating.comment %}<p class="text-muted-custom small mb-0">{{ rating.comment }}</p>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No reviews yet.</p>
+        {% endif %}
+      </div>
+
+      {% if is_owner or can_manage %}
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-folder text-info me-2"></i>Documents</span></div>
+        {% if documents %}
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+          {% for doc in documents %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <a href="{{ doc.file.url }}" target="_blank" class="text-reset"><i class="bi bi-file-earmark me-2"></i>{{ doc.title }} <span class="text-muted-custom small">({{ doc.get_document_type_display }})</span></a>
+            <form method="post" action="{% url 'vendors:vendor_document_delete' doc.pk %}" onsubmit="return confirm('Delete this document?');">
+              {% csrf_token %}<button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No documents uploaded yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-file-earmark-text text-info me-2"></i>Contracts</span></div>
+        {% if contracts %}
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+          {% for contract in contracts %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div>
+              <p class="mb-0"><a href="{% url 'vendors:vendor_contract_detail' contract.pk %}" class="text-reset">{{ contract.title }}</a></p>
+              <p class="text-muted-custom small mb-0">₹{{ contract.amount }}{% if contract.event %} · {{ contract.event.title }}{% endif %}</p>
+            </div>
+            <span class="badge-soft">{{ contract.get_status_display }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No contracts yet.</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+      <div class="glass-card p-4">
+        <h5 class="mb-3"><i class="bi bi-info-circle text-accent me-2"></i>At a glance</h5>
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-0 small text-muted-custom">
+          <li><i class="bi bi-bag-check me-2"></i>{{ services.count }} active service{{ services.count|pluralize }}</li>
+          <li><i class="bi bi-star me-2"></i>{{ vendor.rating_count }} review{{ vendor.rating_count|pluralize }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}{% if is_edit %}Edit Announcement{% else %}New Announcement{% endif %}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4">{% if is_edit %}Edit Announcement{% else %}New Announcement{% endif %}</h3>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            {{ form.title }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Body</label>
+            {{ form.body }}
+          </div>
+          <div class="form-check mb-4">
+            {{ form.is_active }}
+            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active</label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4">Save</button>
+            <a href="{% url 'support:announcement_list' %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

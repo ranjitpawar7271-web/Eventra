@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Cancel Registration{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="glass-card p-4 p-md-5 text-center">
+        <div class="icon-tile icon-tile-danger mx-auto mb-3"><i class="bi bi-x-circle"></i></div>
+        <h3 class="mb-2">Cancel your registration?</h3>
+        <p class="text-muted-custom mb-4">You will lose your spot for "{{ registration.event.title }}". You can register again later if seats are available.</p>
+        <form method="post" class="d-flex gap-2 justify-content-center">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger px-4"><i class="bi bi-x-circle me-2"></i>Yes, Cancel It</button>
+          <a href="{{ registration.event.get_absolute_url }}" class="btn btn-outline-light px-4">Keep Registration</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

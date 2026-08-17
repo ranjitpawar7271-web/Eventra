@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="glass-card p-4 text-center">
+        {% if user.profile_image %}
+          <img src="{{ user.profile_image.url }}" class="rounded-circle mb-3" width="110" height="110" style="object-fit:cover;" alt="{{ user.username }}">
+        {% else %}
+          <div class="icon-tile mx-auto mb-3" style="width:110px;height:110px;font-size:2.4rem;border-radius:50%;">{{ user.initials }}</div>
+        {% endif %}
+        <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
+        <p class="text-muted-custom mb-3">@{{ user.username }}</p>
+        <span class="badge-soft success mb-3 d-inline-block">{{ user.get_role_display }}</span>
+        <div class="d-grid gap-2">
+          <a href="{% url 'users:edit_profile' %}" class="btn btn-outline-light"><i class="bi bi-pencil me-2"></i>Edit Profile</a>
+          <a href="{% url 'users:change_password' %}" class="btn btn-outline-light"><i class="bi bi-shield-lock me-2"></i>Change Password</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="glass-card p-4 mb-4">
+        <h5 class="mb-3"><i class="bi bi-info-circle me-2 text-info"></i>Account Details</h5>
+        <div class="row g-3">
+          <div class="col-md-6"><p class="text-muted-custom mb-1 small">Email</p><p class="mb-0">{{ user.email|default:"—" }}</p></div>
+          <div class="col-md-6"><p class="text-muted-custom mb-1 small">Phone</p><p class="mb-0">{{ user.phone_number|default:"—" }}</p></div>
+          <div class="col-12"><p class="text-muted-custom mb-1 small">Bio</p><p class="mb-0">{{ user.bio|default:"No bio added yet." }}</p></div>
+          <div class="col-md-6"><p class="text-muted-custom mb-1 small">Events Organized</p><p class="mb-0">{{ my_events_count }}</p></div>
+          <div class="col-md-6"><p class="text-muted-custom mb-1 small">Member Since</p><p class="mb-0">{{ user.created_at|date:"M Y" }}</p></div>
+        </div>
+      </div>
+      <div class="glass-card p-4">
+        <h5 class="mb-3"><i class="bi bi-ticket-perforated me-2 text-info"></i>Recent Registrations</h5>
+        {% if registrations %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Event</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for reg in registrations %}
+              <tr>
+                <td><a href="{{ reg.event.get_absolute_url }}">{{ reg.event.title }}</a></td>
+                <td>{{ reg.event.start_date|date:"M d, Y" }}</td>
+                <td><span class="badge-soft {% if reg.status == 'confirmed' %}success{% else %}danger{% endif %}">{{ reg.get_status_display }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted-custom mb-0">You haven't registered for any events yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

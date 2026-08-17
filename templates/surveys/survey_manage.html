@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Manage — {{ survey.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'surveys:survey_list' survey.event.slug %}">Polls & Feedback</a></li>
+      <li class="breadcrumb-item active text-muted-custom">{{ survey.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <h1 class="mb-0">{{ survey.title }}</h1>
+    <div class="d-flex gap-2">
+      <form method="post" action="{% url 'surveys:survey_toggle_open' survey.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-light btn-sm">{% if survey.is_open %}Close Survey{% else %}Reopen Survey{% endif %}</button>
+      </form>
+      <a href="{% url 'surveys:survey_results' survey.pk %}" class="btn btn-outline-light btn-sm">View Results ({{ survey.response_count }})</a>
+      <a href="{% url 'surveys:survey_delete' survey.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+    </div>
+  </div>
+
+  <div class="glass-card p-4 mb-4">
+    <div class="dashboard-panel-title"><span>Questions</span></div>
+    {% for question in questions %}
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 divider-soft">
+      <div>
+        <strong>{{ question.question_text }}</strong>
+        <div class="text-muted-custom small">
+          {{ question.get_question_type_display }}{% if question.required %} · Required{% endif %}
+          {% if question.is_choice_type %} · {{ question.choices.all|join:", " }}{% endif %}
+        </div>
+      </div>
+      <form method="post" action="{% url 'surveys:question_delete' question.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="bi bi-trash"></i></button>
+      </form>
+    </div>
+    {% empty %}
+    <p class="text-muted-custom mb-0">No questions yet — add one below.</p>
+    {% endfor %}
+  </div>
+
+  <div class="glass-card p-4">
+    <div class="dashboard-panel-title"><span>Add a Question</span></div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if question_form.non_field_errors %}<div class="alert alert-danger">{{ question_form.non_field_errors }}</div>{% endif %}
+      <div class="mb-3">
+        <label class="form-label">Question</label>
+        {{ question_form.question_text }}
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Type</label>
+          {{ question_form.question_type }}
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="form-check">
+            {{ question_form.required }}
+            <label class="form-check-label" for="{{ question_form.required.id_for_label }}">Required</label>
+          </div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Choices (for Single/Multiple Choice only)</label>
+        {{ question_form.choices_text }}
+        <div class="form-text">{{ question_form.choices_text.help_text }}</div>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Question</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

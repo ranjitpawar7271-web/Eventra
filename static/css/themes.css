@@ -1,0 +1,73 @@
+/* =========================================================
+   EVENTRA — Theme Override
+   Light lives in style.css :root and is the default surface.
+   This file only overrides those same custom properties for
+   dark mode, so every component that already consumes
+   var(--primary) / var(--card) / etc keeps working with zero
+   markup changes. Per the design brief, the theme switcher is
+   now Light / Dark / System only (see theme-switcher.js) —
+   the previous six-color-swatch picker has been retired.
+   ========================================================= */
+
+html[data-theme="dark"] {
+  --bg: #0A0A0A;
+  --bg-elevated: #151515;
+  --card: #151515;
+  --card-hover: #1C1C1E;
+  --input-bg: #1C1C1E;
+  --input-bg-focus: #202022;
+
+  --primary: #0A84FF;
+  --primary-hover: #3D9BFF;
+  --secondary: #0A84FF;
+  --accent: #0A84FF;
+
+  --success: #30D158;
+  --warning: #FFD60A;
+  --danger: #FF453A;
+
+  --text: #F5F5F7;
+  --text-muted: #A1A1A6;
+  --text-faint: #8E8E93;
+  --border: #2C2C2E;
+
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* -------------------- Theme switcher UI (Light / Dark / System) -------------------- */
+.theme-mode-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.theme-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--fs-secondary);
+  text-align: left;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.theme-mode-option:hover { background: var(--card-hover); }
+.theme-mode-option.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 500;
+}
+.theme-mode-option i { font-size: 1rem; }
+
+.theme-menu-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 0.25rem;
+}

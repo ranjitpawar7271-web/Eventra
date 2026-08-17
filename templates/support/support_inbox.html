@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Support Inbox{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <h1 class="mb-4">Support Inbox</h1>
+
+  <div class="btn-group mb-4">
+    <a href="{% url 'support:support_inbox' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-light{% endif %}">All</a>
+    {% for value, label in status_choices %}
+    <a href="?status={{ value }}" class="btn btn-sm {% if status_filter == value %}btn-primary{% else %}btn-outline-light{% endif %}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="glass-card p-4">
+    {% for req in requests %}
+    <div class="border-bottom pb-3 mb-3 divider-soft">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <span class="badge-soft {% if req.request_type == 'feedback' %}accent{% else %}success{% endif %}">{{ req.get_request_type_display }}</span>
+          <h5 class="mt-2 mb-1">{{ req.subject }}</h5>
+          <p class="text-muted-custom small mb-1">{{ req.name }} · {{ req.email }} · {{ req.created_at|date:"M d, Y g:i A" }}</p>
+        </div>
+        <form method="post" action="{% url 'support:support_request_status_update' req.pk %}">
+          {% csrf_token %}
+          <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if value == req.status %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+      <p class="mb-0">{{ req.message }}</p>
+    </div>
+    {% empty %}
+    <p class="text-muted-custom mb-0">No requests to show.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

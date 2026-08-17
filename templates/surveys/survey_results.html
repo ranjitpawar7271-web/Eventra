@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Results — {{ survey.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'surveys:survey_manage' survey.pk %}">{{ survey.title }}</a></li>
+      <li class="breadcrumb-item active text-muted-custom">Results</li>
+    </ol>
+  </nav>
+  <h1 class="mb-1">{{ survey.title }} — Results</h1>
+  <p class="text-muted-custom mb-4">{{ response_count }} response{{ response_count|pluralize }}</p>
+
+  {% for entry in question_results %}
+  <div class="glass-card p-4 mb-4">
+    <h5 class="mb-3">{{ entry.question.question_text }}</h5>
+    {% if entry.choice_counts %}
+      {% for choice in entry.choice_counts %}
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span>{{ choice.choice_text }}</span>
+        <span class="badge-soft">{{ choice.count }}</span>
+      </div>
+      {% endfor %}
+    {% elif entry.average_rating is not None %}
+      <p class="fs-4 fw-bold mb-0">{{ entry.average_rating|floatformat:1 }} <span class="fs-6 text-muted-custom fw-normal">/ 5 average ({{ entry.rating_count }} rating{{ entry.rating_count|pluralize }})</span></p>
+    {% elif entry.text_answers %}
+      {% for answer in entry.text_answers %}
+      <p class="border-bottom pb-2 mb-2 divider-soft">{{ answer }}</p>
+      {% empty %}
+      <p class="text-muted-custom mb-0">No answers yet.</p>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted-custom mb-0">No responses yet.</p>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <i class="bi bi-clipboard2-data d-block mb-3"></i>
+    <h5>No questions on this survey yet</h5>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

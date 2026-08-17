@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-2"><i class="bi bi-calendar-plus me-2 text-info"></i>{{ title }}</h3>
+        {% if not event %}
+        <p class="text-muted-custom mb-4"><a href="{% url 'events:event_create_start' %}">Start from a template instead →</a></p>
+        {% else %}
+        <div class="mb-4"></div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <p class="text-muted-custom small text-uppercase mb-3" style="letter-spacing:.06em;">Basic Information</p>
+          <div class="mb-3">
+            <label class="form-label">Event Title</label>
+            {{ form.title }}
+            {% for error in form.title.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Category</label>
+              {{ form.category }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Status</label>
+              {{ form.status }}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            {{ form.description }}
+            {% for error in form.description.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+
+          <hr class="divider-soft my-4">
+          <p class="text-muted-custom small text-uppercase mb-3" style="letter-spacing:.06em;">Date &amp; Location</p>
+          <div class="mb-3">
+            <label class="form-label">Location</label>
+            {{ form.location }}
+            {% for error in form.location.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Registered Venue <span class="text-muted-custom small">(optional — enables booking &amp; conflict checks)</span></label>
+            {{ form.venue }}
+            {% for error in form.venue.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Start Date &amp; Time</label>
+              {{ form.start_date }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">End Date &amp; Time</label>
+              {{ form.end_date }}
+            </div>
+          </div>
+          {% if form.errors.start_date or form.errors.end_date %}
+            <div class="alert alert-danger small">{{ form.errors.start_date }} {{ form.errors.end_date }}</div>
+          {% endif %}
+
+          <hr class="divider-soft my-4">
+          <p class="text-muted-custom small text-uppercase mb-3" style="letter-spacing:.06em;">Capacity &amp; Registration</p>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Capacity</label>
+              {{ form.capacity }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Price (₹)</label>
+              {{ form.price }}
+            </div>
+          </div>
+
+          <hr class="divider-soft my-4">
+          <p class="text-muted-custom small text-uppercase mb-3" style="letter-spacing:.06em;">Media</p>
+          <div class="mb-4">
+            <label class="form-label">Event Image</label>
+            {{ form.image }}
+            {% if event.image %}<p class="small text-muted-custom mt-2">Current: {{ event.image.name }}</p>{% endif %}
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-2"></i>Save Event</button>
+            <a href="{% if event %}{{ event.get_absolute_url }}{% else %}{% url 'events:event_list' %}{% endif %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

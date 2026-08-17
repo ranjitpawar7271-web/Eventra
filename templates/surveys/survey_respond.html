@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ survey.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        <span class="badge-soft {% if survey.survey_type == 'poll' %}accent{% else %}success{% endif %} mb-2">{{ survey.get_survey_type_display }}</span>
+        <h2 class="mb-1">{{ survey.title }}</h2>
+        {% if survey.description %}<p class="text-muted-custom mb-4">{{ survey.description }}</p>{% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="mb-4">
+            <label class="form-label fw-semibold">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary px-4"><i class="bi bi-send me-2"></i>Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

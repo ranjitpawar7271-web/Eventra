@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Resources{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Resources</h1>
+      <p class="text-muted-custom mb-0">Chairs, tables, AV equipment, vehicles, and more — allocate what you need for an event.</p>
+    </div>
+    <div class="d-flex gap-2">
+      {% if can_manage_resources %}
+      <a href="{% url 'resources:damage_report_list' %}" class="btn btn-outline-light"><i class="bi bi-exclamation-triangle me-2"></i>Damage Reports</a>
+      <a href="{% url 'resources:resource_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Resource</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card filter-bar mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label">Search</label>
+        <div class="input-icon-group">
+          <i class="bi bi-search form-icon"></i>
+          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search resources...">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Category</label>
+        <select name="category" class="form-select">
+          <option value="">All Categories</option>
+          {% for value, label in categories %}
+          <option value="{{ value }}" {% if value == selected_category %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100" title="Apply"><i class="bi bi-funnel"></i></button>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-4">
+    {% for resource in page_obj %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card event-card h-100 d-flex flex-column fade-in-up">
+        {% if resource.image %}
+          <img src="{{ resource.image.url }}" class="event-card-image" alt="{{ resource.name }}">
+        {% else %}
+          <div class="event-card-placeholder"><i class="bi bi-box-seam"></i></div>
+        {% endif %}
+        <div class="event-card-body d-flex flex-column flex-grow-1">
+          <span class="badge-soft mb-2 align-self-start">{{ resource.get_category_display }}</span>
+          <h5 class="mb-2"><a href="{{ resource.get_absolute_url }}" class="text-reset">{{ resource.name }}</a></h5>
+          <div class="event-meta"><i class="bi bi-stack"></i> {{ resource.usable_quantity }} / {{ resource.total_quantity }} {{ resource.unit }} usable</div>
+          {% if resource.damaged_quantity %}
+          <div class="event-meta text-danger"><i class="bi bi-exclamation-triangle"></i> {{ resource.damaged_quantity }} {{ resource.unit }} out of service</div>
+          {% endif %}
+          <div class="mt-auto pt-3">
+            <a href="{{ resource.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">View &amp; Allocate</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-box-seam d-block mb-3"></i>
+        <h5>No resources found</h5>
+        <p class="text-muted-custom">Try adjusting your search or filters.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-5">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Previous</a></li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ num }}</a></li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Next</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

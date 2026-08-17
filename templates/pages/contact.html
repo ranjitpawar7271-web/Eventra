@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container text-center">
+    <h1>Get in Touch</h1>
+    <p class="text-muted-custom fs-5">Have questions? We'd love to hear from you.</p>
+  </div>
+</div>
+<div class="container section-sm">
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="glass-card p-4 h-100">
+        <h5 class="mb-4">Contact Information</h5>
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="icon-tile"><i class="bi bi-envelope"></i></div>
+          <div><p class="mb-0 text-muted-custom small">Email</p><p class="mb-0">support@eventra.com</p></div>
+        </div>
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="icon-tile"><i class="bi bi-telephone"></i></div>
+          <div><p class="mb-0 text-muted-custom small">Phone</p><p class="mb-0">+91 98765 43210</p></div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <div class="icon-tile"><i class="bi bi-geo-alt"></i></div>
+          <div><p class="mb-0 text-muted-custom small">Office</p><p class="mb-0">Pune, Maharashtra, India</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="glass-card p-4 p-md-5">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <div class="form-floating">
+                <input type="text" name="name" class="form-control" id="contactName" placeholder="Your Name" required>
+                <label for="contactName"><i class="bi bi-person me-1"></i>Your Name</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-floating">
+                <input type="email" name="email" class="form-control" id="contactEmail" placeholder="Email" required>
+                <label for="contactEmail"><i class="bi bi-envelope me-1"></i>Email Address</label>
+              </div>
+            </div>
+          </div>
+          <div class="form-floating mb-3">
+            <input type="text" name="subject" class="form-control" id="contactSubject" placeholder="Subject" required>
+            <label for="contactSubject"><i class="bi bi-chat-text me-1"></i>Subject</label>
+          </div>
+          <div class="form-floating mb-4">
+            <textarea name="message" class="form-control" id="contactMessage" placeholder="Message" style="height: 140px;" required></textarea>
+            <label for="contactMessage"><i class="bi bi-pencil me-1"></i>Your Message</label>
+          </div>
+          <button type="submit" class="btn btn-primary px-4"><i class="bi bi-send me-2"></i>Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

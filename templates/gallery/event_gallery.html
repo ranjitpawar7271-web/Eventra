@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Gallery — {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active text-muted-custom">Gallery</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <h1 class="mb-0">Photo Gallery</h1>
+    <div class="btn-group">
+      <a href="{% url 'gallery:event_gallery' event.slug %}" class="btn btn-sm {% if not show_highlights_only %}btn-primary{% else %}btn-outline-light{% endif %}">All Photos</a>
+      <a href="{% url 'gallery:event_gallery' event.slug %}?filter=highlights" class="btn btn-sm {% if show_highlights_only %}btn-primary{% else %}btn-outline-light{% endif %}">Highlights</a>
+    </div>
+  </div>
+
+  {% if can_upload %}
+  <div class="glass-card p-4 mb-4">
+    <div class="dashboard-panel-title"><span>Add a Photo</span></div>
+    <form method="post" action="{% url 'gallery:photo_upload' event.slug %}" enctype="multipart/form-data" class="row g-3 align-items-end">
+      {% csrf_token %}
+      <div class="col-md-5">
+        <label class="form-label">Photo</label>
+        {{ form.image }}
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">Caption</label>
+        {{ form.caption }}
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-upload"></i> Upload</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  <div class="row g-3">
+    {% for photo in photos %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="glass-card p-2 h-100 d-flex flex-column">
+        <div style="position: relative;">
+          <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" style="width: 100%; height: 160px; object-fit: cover; border-radius: var(--radius);">
+          {% if photo.is_highlight %}
+          <span class="badge-soft accent" style="position: absolute; top: 6px; left: 6px;"><i class="bi bi-star-fill"></i></span>
+          {% endif %}
+        </div>
+        {% if photo.caption %}<p class="small text-muted-custom mt-2 mb-1">{{ photo.caption }}</p>{% endif %}
+        {% if can_manage or photo.uploaded_by_id == user.id %}
+        <div class="d-flex gap-2 mt-auto pt-2">
+          {% if can_manage %}
+          <form method="post" action="{% url 'gallery:photo_toggle_highlight' photo.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-light" title="{% if photo.is_highlight %}Remove highlight{% else %}Mark as highlight{% endif %}">
+              <i class="bi {% if photo.is_highlight %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+            </button>
+          </form>
+          {% endif %}
+          <form method="post" action="{% url 'gallery:photo_delete' photo.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="bi bi-trash"></i></button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-images d-block mb-3"></i>
+        <h5>{% if show_highlights_only %}No highlights yet{% else %}No photos yet{% endif %}</h5>
+        <p class="text-muted-custom mb-0">{% if can_upload %}Be the first to add one!{% else %}Check back after the event.{% endif %}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

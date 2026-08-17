@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Ticket {{ ticket.ticket_code }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'tickets:my_tickets' %}">My Tickets</a></li>
+      <li class="breadcrumb-item active text-muted-custom">{{ ticket.ticket_code }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="glass-card p-4 text-center">
+        <div class="dashboard-panel-title justify-content-center"><span><i class="bi bi-qr-code text-info me-2"></i>Scan at the door</span></div>
+        <img src="{% url 'tickets:ticket_qr' ticket.ticket_code %}" alt="Ticket QR code" class="img-fluid rounded" style="max-width: 260px; background: #fff; padding: 12px;">
+        <p class="text-muted-custom small mt-3 mb-1">Ticket Code</p>
+        <p class="mb-3"><code>{{ ticket.ticket_code }}</code></p>
+        <a href="{% url 'tickets:ticket_pdf' ticket.ticket_code %}" class="btn btn-primary w-100"><i class="bi bi-download me-2"></i>Download PDF Ticket</a>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-ticket-perforated text-info me-2"></i>Ticket Details</span></div>
+        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 divider-soft">
+          <span class="text-muted-custom">Event</span>
+          <a href="{{ ticket.event.get_absolute_url }}" class="text-end">{{ ticket.event.title }}</a>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 divider-soft">
+          <span class="text-muted-custom">Attendee</span>
+          <span>{{ ticket.participant.get_full_name|default:ticket.participant.username }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 divider-soft">
+          <span class="text-muted-custom">Date</span>
+          <span>{{ ticket.event.start_date|date:"M d, Y - g:i A" }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 divider-soft">
+          <span class="text-muted-custom">Location</span>
+          <span>{{ ticket.event.location }} <a href="{{ ticket.event.map_url }}" target="_blank" rel="noopener" class="ms-1" title="Open in Maps"><i class="bi bi-map"></i></a></span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom pb-2 mb-2 divider-soft">
+          <span class="text-muted-custom">Ticket Type</span>
+          <span class="badge-soft {% if ticket.ticket_type == 'vip' %}accent{% endif %}">{{ ticket.get_ticket_type_display }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted-custom">Status</span>
+          <span class="badge-soft {% if ticket.status == 'checked_in' %}success{% elif ticket.status == 'cancelled' or ticket.status == 'refunded' %}danger{% endif %}">
+            {{ ticket.get_status_display }}
+          </span>
+        </div>
+        {% if ticket.checked_in_at %}
+        <p class="text-muted-custom small mt-3 mb-0">
+          <i class="bi bi-box-arrow-in-right me-1"></i>Checked in {{ ticket.checked_in_at|date:"M d, Y - g:i A" }}{% if ticket.checked_in_by %} by {{ ticket.checked_in_by.get_full_name|default:ticket.checked_in_by.username }}{% endif %}
+        </p>
+        {% endif %}
+        {% if ticket.checked_out_at %}
+        <p class="text-muted-custom small mb-0">
+          <i class="bi bi-box-arrow-right me-1"></i>Checked out {{ ticket.checked_out_at|date:"M d, Y - g:i A" }}{% if ticket.checked_out_by %} by {{ ticket.checked_out_by.get_full_name|default:ticket.checked_out_by.username }}{% endif %}
+        </p>
+        {% endif %}
+      </div>
+
+      {% if can_manage %}
+      <div class="glass-card p-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-gear text-info me-2"></i>Manage Ticket</span></div>
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <form method="post" action="{% url 'tickets:ticket_type_update' ticket.ticket_code %}" class="d-flex gap-2 align-items-end">
+              {% csrf_token %}
+              <div class="flex-grow-1">
+                <label class="form-label small">Ticket Type</label>
+                {{ type_form.ticket_type }}
+              </div>
+              <button type="submit" class="btn btn-sm btn-outline-light">Save</button>
+            </form>
+          </div>
+          {% if ticket.status != 'checked_in' %}
+          <div class="col-sm-6">
+            <form method="post" action="{% url 'tickets:ticket_status_update' ticket.ticket_code %}" class="d-flex gap-2 align-items-end">
+              {% csrf_token %}
+              <div class="flex-grow-1">
+                <label class="form-label small">Status</label>
+                {{ status_form.status }}
+              </div>
+              <button type="submit" class="btn btn-sm btn-outline-light">Save</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        <hr class="divider-soft">
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'tickets:scanner' ticket.event.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-upc-scan me-2"></i>Open Scanner</a>
+          <a href="{% url 'tickets:checkin_logs' ticket.event.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-clipboard-data me-2"></i>Attendance Report</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

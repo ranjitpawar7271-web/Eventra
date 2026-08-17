@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Allocate Resource{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4"><i class="bi bi-box-arrow-in-down me-2 text-info"></i>Allocate {% if resource %}{{ resource.name }}{% else %}a Resource{% endif %}</h3>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <div class="mb-3">
+            <label class="form-label">Resource</label>
+            {{ form.resource }}
+            {% for error in form.resource.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Quantity</label>
+              {{ form.quantity }}
+              {% for error in form.quantity.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Purpose</label>
+              {{ form.purpose }}
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Start</label>
+              {{ form.start_datetime }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">End</label>
+              {{ form.end_datetime }}
+            </div>
+          </div>
+          {% if form.errors.start_datetime or form.errors.end_datetime %}
+            <div class="alert alert-danger small">{{ form.errors.start_datetime }} {{ form.errors.end_datetime }}</div>
+          {% endif %}
+          <div class="mb-4">
+            <label class="form-label">Notes</label>
+            {{ form.notes }}
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-2"></i>Confirm Allocation</button>
+            <a href="{% if resource %}{{ resource.get_absolute_url }}{% else %}{% url 'resources:resource_list' %}{% endif %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

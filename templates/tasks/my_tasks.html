@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}My Tasks{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container text-center">
+    <h1>My Tasks</h1>
+    <p class="text-muted-custom fs-5">Everything assigned to you, across every event.</p>
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card p-4">
+    {% if tasks %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Task</th><th>Event</th><th>Status</th><th>Priority</th><th>Due</th></tr></thead>
+      <tbody>
+      {% for task in tasks %}
+      <tr>
+        <td><a href="{% url 'tasks:task_detail' task.pk %}" class="text-reset">{{ task.title }}</a></td>
+        <td><a href="{{ task.event.get_absolute_url }}" class="text-reset">{{ task.event.title }}</a></td>
+        <td><span class="badge-soft">{{ task.get_status_display }}</span></td>
+        <td><span class="badge-soft {% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% else %}success{% endif %}">{{ task.get_priority_display }}</span></td>
+        <td class="{% if task.is_overdue %}text-danger{% endif %}">{% if task.due_date %}{{ task.due_date|date:"M d, Y" }}{% if task.is_overdue %} (overdue){% endif %}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-list-check d-block mb-3"></i>
+      <h5>No tasks assigned to you</h5>
+      <p class="text-muted-custom mb-0">When someone assigns you a task on an event's board, it'll show up here.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

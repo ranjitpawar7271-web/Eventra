@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+  {% include 'includes/sidebar.html' %}
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <div>
+        <h2 class="mb-1">Welcome back, {{ user.first_name|default:user.username }} 👋</h2>
+        <p class="text-muted-custom mb-0">
+          <span class="badge-soft accent me-2">{{ user.get_role_display }}</span>
+          Here's what's happening with your events today.
+        </p>
+      </div>
+      {% if user.can_manage_events %}
+      <a href="{% url 'events:event_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Create Event</a>
+      {% endif %}
+    </div>
+
+    {% if is_admin_view %}
+    <div class="glass-card p-4 mb-4">
+      <div class="dashboard-panel-title"><span><i class="bi bi-shield-check text-accent me-2"></i>System Overview (Super Admin)</span></div>
+      <div class="row g-3">
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-calendar3"></i></div>
+            <div><p class="stat-value">{{ sys_total_events }}</p><p class="stat-label">Total Events</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-broadcast"></i></div>
+            <div><p class="stat-value">{{ sys_active_events }}</p><p class="stat-label">Active</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-calendar-week"></i></div>
+            <div><p class="stat-value">{{ sys_upcoming_events }}</p><p class="stat-label">Upcoming</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-check-circle"></i></div>
+            <div><p class="stat-value">{{ sys_completed_events }}</p><p class="stat-label">Completed</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-x-circle"></i></div>
+            <div><p class="stat-value">{{ sys_cancelled_events }}</p><p class="stat-label">Cancelled</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-ticket-perforated"></i></div>
+            <div><p class="stat-value">{{ sys_total_registrations }}</p><p class="stat-label">Confirmed Regs</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <a href="{% url 'workflow:approval_list' %}" class="text-decoration-none">
+            <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-clipboard-check"></i></div>
+              <div><p class="stat-value">{{ sys_pending_approvals }}</p><p class="stat-label">Pending Approvals</p></div></div>
+          </a>
+        </div>
+      </div>
+      <hr class="divider-soft">
+      <div class="row g-3">
+        <div class="col-sm-6 col-xl-3">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-graph-up-arrow"></i></div>
+            <div><p class="stat-value">₹{{ sys_total_revenue }}</p><p class="stat-label">Total Revenue</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-wallet2"></i></div>
+            <div><p class="stat-value">₹{{ sys_total_expenses }}</p><p class="stat-label">Total Expenses</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-cash-coin"></i></div>
+            <div><p class="stat-value">₹{{ sys_net_profit }}</p><p class="stat-label">Net Profit / Loss</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-truck"></i></div>
+            <div><p class="stat-value">₹{{ sys_vendor_payments }}</p><p class="stat-label">Vendor Payments</p></div></div>
+        </div>
+      </div>
+      <hr class="divider-soft">
+      <div class="row g-3">
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-people-fill"></i></div>
+            <div><p class="stat-value">{{ sys_total_users }}</p><p class="stat-label">Total Users</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-person"></i></div>
+            <div><p class="stat-value">{{ sys_total_participants }}</p><p class="stat-label">Participants</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-person-workspace"></i></div>
+            <div><p class="stat-value">{{ sys_total_organizers }}</p><p class="stat-label">Organizers</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-person-badge"></i></div>
+            <div><p class="stat-value">{{ sys_total_staff }}</p><p class="stat-label">Staff</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-truck"></i></div>
+            <div><p class="stat-value">{{ sys_total_vendors }}</p><p class="stat-label">Vendors</p></div></div>
+        </div>
+        <div class="col-sm-6 col-xl-2">
+          <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-heart"></i></div>
+            <div><p class="stat-value">{{ sys_total_volunteers }}</p><p class="stat-label">Volunteers</p></div></div>
+        </div>
+      </div>
+      <p class="text-muted-custom small mt-3 mb-0">
+        <i class="bi bi-info-circle me-1"></i>Resource-utilization widgets light up once the
+        Resource module is further along. Approvals, notifications, and the shared calendar
+        are live — see the card above and the bell icon in the navbar.
+      </p>
+    </div>
+    {% endif %}
+
+    {% if my_pending_approvals or my_unread_notifications %}
+    <div class="glass-card p-3 mb-4 d-flex flex-wrap gap-3 align-items-center">
+      {% if my_pending_approvals %}
+        <a href="{% url 'workflow:notification_list' %}" class="badge-soft accent text-decoration-none">
+          <i class="bi bi-hourglass-split me-1"></i>{{ my_pending_approvals }} event{{ my_pending_approvals|pluralize }} awaiting approval
+        </a>
+      {% endif %}
+      {% if my_unread_notifications %}
+        <a href="{% url 'workflow:notification_list' %}" class="badge-soft accent text-decoration-none">
+          <i class="bi bi-bell me-1"></i>{{ my_unread_notifications }} unread notification{{ my_unread_notifications|pluralize }}
+        </a>
+      {% endif %}
+      <a href="{% url 'workflow:calendar' %}" class="badge-soft accent text-decoration-none">
+        <i class="bi bi-calendar3 me-1"></i>View calendar
+      </a>
+    </div>
+    {% endif %}
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="glass-card dashboard-stat-card">
+          <div class="icon-tile"><i class="bi bi-calendar-event"></i></div>
+          <div><p class="stat-value">{{ total_events }}</p><p class="stat-label">Total Events</p></div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="glass-card dashboard-stat-card">
+          <div class="icon-tile"><i class="bi bi-tags"></i></div>
+          <div><p class="stat-value">{{ total_categories }}</p><p class="stat-label">Total Categories</p></div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="glass-card dashboard-stat-card">
+          <div class="icon-tile"><i class="bi bi-people"></i></div>
+          <div><p class="stat-value">{{ total_participants }}</p><p class="stat-label">Total Participants</p></div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="glass-card dashboard-stat-card">
+          <div class="icon-tile"><i class="bi bi-ticket-perforated"></i></div>
+          <div><p class="stat-value">{{ my_registrations_count }}</p><p class="stat-label">My Registrations</p></div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="glass-card dashboard-stat-card">
+          <div class="icon-tile"><i class="bi bi-calendar-week"></i></div>
+          <div><p class="stat-value">{{ my_upcoming_count }}</p><p class="stat-label">My Upcoming Events</p></div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="glass-card dashboard-stat-card">
+          <div class="icon-tile"><i class="bi bi-check-circle"></i></div>
+          <div><p class="stat-value">{{ my_completed_count }}</p><p class="stat-label">My Completed Events</p></div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="glass-card dashboard-stat-card">
+          <div class="icon-tile"><i class="bi bi-x-circle"></i></div>
+          <div><p class="stat-value">{{ my_cancelled_count }}</p><p class="stat-label">My Cancelled Events</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+          <div class="dashboard-panel-title"><span><i class="bi bi-lightning-charge text-accent me-2"></i>Quick Actions</span></div>
+          <div class="d-grid gap-2">
+            {% if user.can_manage_events %}
+            <a href="{% url 'events:event_create' %}" class="quick-action"><i class="bi bi-plus-circle text-info"></i> Create Event</a>
+            <a href="{% url 'categories:category_create' %}" class="quick-action"><i class="bi bi-tag text-info"></i> Add Category</a>
+            <a href="{% url 'events:my_events' %}" class="quick-action"><i class="bi bi-calendar-check text-info"></i> Manage My Events</a>
+            <a href="{% url 'budget:budget_list' %}" class="quick-action"><i class="bi bi-cash-coin text-info"></i> Budgets & Expenses</a>
+            <a href="{% url 'reports:report_hub' %}" class="quick-action"><i class="bi bi-graph-up text-info"></i> Reports & Analytics</a>
+            {% endif %}
+            <a href="{% url 'events:my_registrations' %}" class="quick-action"><i class="bi bi-ticket-perforated text-info"></i> My Registrations</a>
+            <a href="{% url 'tickets:my_tickets' %}" class="quick-action"><i class="bi bi-qr-code text-info"></i> My Tickets</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="glass-card p-4 h-100">
+          <div class="dashboard-panel-title">
+            <span><i class="bi bi-calendar-week text-info me-2"></i>Upcoming Events</span>
+            <a href="{% url 'events:event_list' %}" class="small">View all</a>
+          </div>
+          {% if upcoming_events %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead><tr><th>Event</th><th>Category</th><th>Date</th></tr></thead>
+              <tbody>
+                {% for event in upcoming_events %}
+                <tr>
+                  <td><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></td>
+                  <td>{% if event.category %}<span class="badge-soft">{{ event.category.name }}</span>{% endif %}</td>
+                  <td>{{ event.start_date|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p class="text-muted-custom mb-0">No upcoming events yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="glass-card p-4 h-100">
+          <div class="dashboard-panel-title"><span><i class="bi bi-person-lines-fill text-info me-2"></i>Recent Registrations</span></div>
+          {% if recent_registrations %}
+          <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+            {% for reg in recent_registrations %}
+            <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+              <div>
+                <p class="mb-0">{{ reg.user.get_full_name|default:reg.user.username }}</p>
+                <p class="text-muted-custom mb-0 small">{{ reg.event.title }}</p>
+              </div>
+              <span class="badge-soft success">{{ reg.get_status_display }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted-custom mb-0">No registrations for your events yet.</p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="glass-card p-4 h-100">
+          <div class="dashboard-panel-title"><span><i class="bi bi-clock-history text-info me-2"></i>Recent Events</span></div>
+          {% if recent_events %}
+          <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+            {% for event in recent_events %}
+            <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+              <div>
+                <a href="{{ event.get_absolute_url }}">{{ event.title }}</a>
+                <p class="text-muted-custom mb-0 small">{{ event.created_at|date:"M d, Y" }}</p>
+              </div>
+              <span class="badge-soft {% if event.status == 'published' %}success{% elif event.status == 'cancelled' %}danger{% else %}accent{% endif %}">{{ event.get_status_display }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted-custom mb-0">You haven't created any events yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if user.can_manage_events and has_budgets %}
+    <div class="row g-4 mt-1">
+      <div class="col-12">
+        <div class="glass-card p-4">
+          <div class="dashboard-panel-title">
+            <span><i class="bi bi-cash-coin text-accent me-2"></i>My Budgets (across my events)</span>
+            <a href="{% url 'budget:budget_list' %}" class="small">View all</a>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-piggy-bank"></i></div>
+                <div><p class="stat-value">₹{{ my_estimated_budget }}</p><p class="stat-label">Estimated</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-wallet2"></i></div>
+                <div><p class="stat-value">₹{{ my_total_expenses }}</p><p class="stat-label">Spent</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-graph-up-arrow"></i></div>
+                <div><p class="stat-value">₹{{ my_total_revenue }}</p><p class="stat-label">Revenue</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-cash-coin"></i></div>
+                <div><p class="stat-value">₹{{ my_profit_or_loss }}</p><p class="stat-label">Profit / Loss</p></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% if user.can_manage_events and has_registration_activity %}
+    <div class="row g-4 mt-1">
+      <div class="col-12">
+        <div class="glass-card p-4">
+          <div class="dashboard-panel-title">
+            <span><i class="bi bi-clipboard-data text-accent me-2"></i>Registrations, Attendance & Ticketing (across my events)</span>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-check-circle"></i></div>
+                <div><p class="stat-value">{{ my_reg_confirmed }}</p><p class="stat-label">Confirmed Registrations</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-x-circle"></i></div>
+                <div><p class="stat-value">{{ my_reg_cancelled }}</p><p class="stat-label">Cancelled Registrations</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-hourglass-split"></i></div>
+                <div><p class="stat-value">{{ my_reg_waitlisted }}</p><p class="stat-label">Waitlisted</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-percent"></i></div>
+                <div><p class="stat-value">{{ my_attendance_rate }}%</p><p class="stat-label">Attendance Rate</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-ticket-perforated"></i></div>
+                <div><p class="stat-value">{{ my_tickets_generated }}</p><p class="stat-label">Tickets Generated</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-qr-code-scan"></i></div>
+                <div><p class="stat-value">{{ my_tickets_used }}</p><p class="stat-label">Tickets Used</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-ticket"></i></div>
+                <div><p class="stat-value">{{ my_tickets_unused }}</p><p class="stat-label">Tickets Unused</p></div></div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+              <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-cash-coin"></i></div>
+                <div><p class="stat-value">{{ my_payments_successful }}</p><p class="stat-label">Successful Payments</p></div></div>
+            </div>
+          </div>
+          {% if my_payments_pending or my_payments_failed or my_payments_refunded %}
+          <div class="d-flex flex-wrap gap-3 mt-3 small text-muted-custom">
+            <span><i class="bi bi-clock-history me-1"></i>{{ my_payments_pending }} pending</span>
+            <span><i class="bi bi-exclamation-circle me-1"></i>{{ my_payments_failed }} failed</span>
+            <span><i class="bi bi-arrow-counterclockwise me-1"></i>{{ my_payments_refunded }} refunded</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

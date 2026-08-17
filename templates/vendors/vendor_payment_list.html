@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Vendor Payments{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1>Vendor Payments</h1>
+    <p class="text-muted-custom mb-0">All payments recorded across every vendor contract.</p>
+  </div>
+</div>
+<div class="container section-sm">
+  <div class="glass-card p-4">
+    {% if payments %}
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Vendor</th><th>Contract</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for payment in payments %}
+          <tr>
+            <td><a href="{{ payment.vendor.get_absolute_url }}" class="text-reset">{{ payment.vendor.company_name }}</a></td>
+            <td>{% if payment.contract %}<a href="{% url 'vendors:vendor_contract_detail' payment.contract.pk %}" class="text-reset">{{ payment.contract.title }}</a>{% else %}—{% endif %}</td>
+            <td>₹{{ payment.amount }}</td>
+            <td>{{ payment.get_method_display }}</td>
+            <td><span class="badge-soft {% if payment.status == 'paid' %}success{% elif payment.status == 'failed' %}danger{% else %}warning{% endif %}">{{ payment.get_status_display }}</span></td>
+            <td>{{ payment.payment_date }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-cash-stack d-block mb-3"></i>
+      <h5>No payments recorded yet</h5>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

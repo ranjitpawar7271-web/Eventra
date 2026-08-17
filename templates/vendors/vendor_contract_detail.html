@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}{{ contract.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <p class="text-muted-custom mb-1"><a href="{{ contract.vendor.get_absolute_url }}" class="text-reset">{{ contract.vendor.company_name }}</a></p>
+            <h2 class="mb-0">{{ contract.title }}</h2>
+          </div>
+          <span class="badge-soft">{{ contract.get_status_display }}</span>
+        </div>
+        {% if contract.event %}<div class="event-meta"><i class="bi bi-calendar-event"></i> <a href="{{ contract.event.get_absolute_url }}">{{ contract.event.title }}</a></div>{% endif %}
+        <div class="event-meta"><i class="bi bi-currency-rupee"></i> Contract amount: ₹{{ contract.amount }}</div>
+        <div class="event-meta"><i class="bi bi-cash-coin"></i> Paid: ₹{{ contract.total_paid }} · Balance: ₹{{ contract.balance_due }}</div>
+        {% if contract.start_date %}<div class="event-meta"><i class="bi bi-calendar3"></i> {{ contract.start_date }} – {{ contract.end_date|default:"?" }}</div>{% endif %}
+        <p class="mt-3">{{ contract.description|default:"No description provided." }}</p>
+        {% if contract.document %}<a href="{{ contract.document.url }}" target="_blank" class="btn btn-sm btn-outline-light"><i class="bi bi-file-earmark me-1"></i>View Document</a>{% endif %}
+
+        {% if can_manage %}
+        <form method="post" action="{% url 'vendors:vendor_contract_update_status' contract.pk %}" class="d-flex gap-2 align-items-end mt-4">
+          {% csrf_token %}
+          <div>
+            <label class="form-label small">Update Status</label>
+            {{ status_form.status }}
+          </div>
+          <button type="submit" class="btn btn-outline-light">Update</button>
+        </form>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-cash-stack text-info me-2"></i>Payments</span></div>
+        {% if payments %}
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-3">
+          {% for payment in payments %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <span>₹{{ payment.amount }} · {{ payment.get_method_display }} · {{ payment.payment_date }}</span>
+            <span class="badge-soft {% if payment.status == 'paid' %}success{% elif payment.status == 'failed' %}danger{% else %}warning{% endif %}">{{ payment.get_status_display }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom">No payments recorded yet.</p>
+        {% endif %}
+
+        {% if can_manage %}
+        <form method="post" action="{% url 'vendors:vendor_payment_create' contract.pk %}" class="row g-2 align-items-end mt-2">
+          {% csrf_token %}
+          <div class="col-md-3">
+            <label class="form-label small">Amount</label>
+            {{ payment_form.amount }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Method</label>
+            {{ payment_form.method }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Date</label>
+            {{ payment_form.payment_date }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Status</label>
+            {{ payment_form.status }}
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-sm mt-2"><i class="bi bi-plus-circle me-1"></i>Record Payment</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

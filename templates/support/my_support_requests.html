@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}My Support Requests{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <h1 class="mb-4">My Support Requests</h1>
+  <div class="glass-card p-4">
+    {% for req in requests %}
+    <div class="border-bottom pb-3 mb-3 divider-soft">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <span class="badge-soft {% if req.request_type == 'feedback' %}accent{% else %}success{% endif %}">{{ req.get_request_type_display }}</span>
+          <h5 class="mt-2 mb-1">{{ req.subject }}</h5>
+        </div>
+        <span class="badge-soft {% if req.status == 'resolved' %}success{% elif req.status == 'in_progress' %}warning{% else %}accent{% endif %}">{{ req.get_status_display }}</span>
+      </div>
+      <p class="text-muted-custom mb-1">{{ req.message }}</p>
+      <p class="text-muted-custom small mb-0">Submitted {{ req.created_at|date:"M d, Y" }}</p>
+    </div>
+    {% empty %}
+    <p class="text-muted-custom mb-0">You haven't submitted any support requests yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

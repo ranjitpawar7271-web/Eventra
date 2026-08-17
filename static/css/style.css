@@ -1,0 +1,410 @@
+/* =========================================================
+   EVENTRA — Design System (Foundation / Phase 1)
+   Plan. Manage. Experience.
+
+   Single source of truth for color, radius, shadow and spacing.
+   Every existing component below (and every other stylesheet in
+   this project) consumes these custom properties, so retheming
+   happens here — not by hardcoding colors on individual pages.
+
+   Light is the default surface; dark is an override applied via
+   [data-theme="dark"] on <html> (see themes.css + theme-switcher.js).
+   ========================================================= */
+
+:root {
+  /* ---- Light theme (default) ---- */
+  --bg: #F7F7F8;
+  --bg-elevated: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F1F1F3;
+  --input-bg: #FFFFFF;
+  --input-bg-focus: #FFFFFF;
+
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --secondary: #2563EB;   /* kept as an alias so existing var(--secondary) usages stay on-brand */
+  --accent: #2563EB;
+
+  --success: #16803C;
+  --warning: #B7791F;
+  --danger: #D92D20;
+
+  --text: #111111;
+  --text-muted: #6B6B6F;
+  --text-faint: #8E8E93;
+  --border: #E5E5E7;
+
+  /* ---- Shape & elevation ---- */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
+
+  /* ---- Spacing scale (4px base) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- Typography scale ---- */
+  --fs-page-heading: 2.25rem;   /* 36px */
+  --fs-section-heading: 1.5rem; /* 24px */
+  --fs-card-heading: 1.125rem;  /* 18px */
+  --fs-body: 0.95rem;           /* ~15px */
+  --fs-secondary: 0.875rem;     /* 14px */
+  --fs-meta: 0.8125rem;         /* 13px */
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+main { flex: 1 0 auto; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+h1 { font-size: var(--fs-page-heading); }
+h2 { font-size: var(--fs-section-heading); }
+p, li { font-size: var(--fs-body); }
+small, .text-meta { font-size: var(--fs-meta); color: var(--text-faint); }
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--primary-hover); }
+
+.text-muted-custom { color: var(--text-muted) !important; }
+.text-accent { color: var(--accent) !important; }
+.text-success-custom { color: var(--success) !important; }
+
+/* -------------------- Layout helpers -------------------- */
+.section { padding: 5rem 0; }
+.section-sm { padding: 3rem 0; }
+
+.page-hero {
+  padding: 4.5rem 0 3rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+
+.page-hero h1 { font-size: 2.25rem; }
+
+/* -------------------- Cards --------------------
+   "glass-card" keeps its name for zero-markup-change compatibility
+   across ~30 templates, but no longer uses blur/gradients — solid
+   surface + subtle border + soft shadow, per the reduced-glassmorphism
+   direction in the design brief. */
+.glass-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.card-flat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* -------------------- Buttons -------------------- */
+.btn {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  padding: 0.6rem 1.4rem;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  box-shadow: none;
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-outline-light {
+  border-radius: var(--radius-sm);
+  border-color: var(--border);
+  color: var(--text);
+}
+.btn-outline-light:hover { background: var(--card-hover); color: var(--text); transform: translateY(-1px); }
+
+.btn-accent {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+.btn-accent:hover { background: var(--primary-hover); border-color: var(--primary-hover); transform: translateY(-1px); }
+
+.btn-danger { border-radius: var(--radius-sm); }
+.btn-success { border-radius: var(--radius-sm); }
+
+.btn-sm-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+/* -------------------- Badges & Pills (status system) -------------------- */
+.badge-soft {
+  background: rgba(37, 99, 235, 0.10);
+  color: var(--primary);
+  font-weight: 500;
+  padding: 0.4em 0.85em;
+  border-radius: 30px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+}
+
+.badge-soft.success { background: rgba(22, 128, 60, 0.10); color: var(--success); border-color: rgba(22, 128, 60, 0.2); }
+.badge-soft.danger { background: rgba(217, 45, 32, 0.10); color: var(--danger); border-color: rgba(217, 45, 32, 0.2); }
+.badge-soft.accent, .badge-soft.warning { background: rgba(183, 121, 31, 0.12); color: var(--warning); border-color: rgba(183, 121, 31, 0.22); }
+
+/* -------------------- Tables -------------------- */
+.table {
+  color: var(--text);
+  border-color: var(--border);
+  --bs-table-bg: transparent;
+}
+.table > :not(caption) > * > * { background-color: transparent; border-bottom-color: var(--border); }
+.table thead th {
+  color: var(--text-muted);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+}
+.table tbody tr:hover { background-color: var(--card-hover); }
+
+/* -------------------- Sections -------------------- */
+.hero {
+  padding: 6rem 0 5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.10), transparent 70%);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.hero-content { position: relative; z-index: 1; }
+
+.stat-card {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+.stat-card i { font-size: 2rem; color: var(--primary); }
+.stat-card h3 { font-size: 2rem; margin: 0.5rem 0 0; }
+
+.icon-tile {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  background: rgba(37, 99, 235, 0.10);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.icon-tile.icon-tile-danger {
+  background: rgba(217, 45, 32, 0.10);
+  color: var(--danger);
+}
+html[data-theme="dark"] .icon-tile.icon-tile-danger {
+  background: rgba(255, 69, 58, 0.14);
+}
+
+.icon-tile.icon-tile-success {
+  background: rgba(22, 128, 60, 0.10);
+  color: var(--success);
+}
+html[data-theme="dark"] .icon-tile.icon-tile-success {
+  background: rgba(48, 209, 88, 0.14);
+}
+
+/* -------------------- Top Navbar (Phase 2: Navigation) -------------------- */
+.site-navbar {
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.site-navbar .navbar-brand,
+.site-navbar .navbar-brand span:not([class*="text-"]) { color: var(--text); }
+
+.site-navbar .nav-link {
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 0.55rem 0.9rem !important;
+}
+.site-navbar .nav-link:hover { color: var(--text); }
+.site-navbar .nav-link.active { color: var(--primary); }
+
+.site-navbar .navbar-toggler {
+  border-color: var(--border);
+}
+.site-navbar .navbar-toggler-icon {
+  filter: var(--navbar-toggler-filter, none);
+}
+html[data-theme="dark"] .site-navbar .navbar-toggler-icon {
+  --navbar-toggler-filter: invert(1);
+}
+
+/* -------------------- Dropdowns (shared across navbar/sidebar menus) -------------------- */
+.dropdown-menu {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+.dropdown-item {
+  color: var(--text);
+}
+.dropdown-item:hover, .dropdown-item:focus {
+  background: var(--card-hover);
+  color: var(--text);
+}
+.dropdown-item.active, .dropdown-item:active {
+  background: var(--primary);
+  color: #ffffff;
+}
+.dropdown-divider { border-color: var(--border); }
+
+.accordion-button {
+  color: var(--text);
+  font-weight: 500;
+}
+.accordion-button:not(.collapsed) { color: var(--primary); background: transparent; box-shadow: none; }
+.accordion-button:focus { box-shadow: none; border-color: var(--border); }
+.accordion-button::after { filter: var(--navbar-toggler-filter, none); }
+html[data-theme="dark"] .accordion-button::after { --navbar-toggler-filter: invert(1); }
+.site-footer {
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  padding: 3rem 0 1.5rem;
+  margin-top: 4rem;
+}
+.site-footer a { color: var(--text-muted); }
+.site-footer a:hover { color: var(--secondary); }
+.footer-brand { font-weight: 700; font-size: 1.4rem; color: var(--text); }
+
+/* -------------------- Scrollbar -------------------- */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+/* -------------------- Misc -------------------- */
+.divider-soft { border-color: var(--border); }
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 1.5rem;
+}
+.empty-state i { font-size: 3rem; color: var(--text-muted); }
+
+/* -------------------- Pagination -------------------- */
+.pagination .page-link {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--text);
+}
+.pagination .page-link:hover {
+  background: var(--card-hover);
+  color: var(--primary);
+  border-color: var(--border);
+}
+.pagination .page-item.active .page-link {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.pagination .page-item.disabled .page-link {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--text-faint);
+}
+
+/* -------------------- Toast Notifications -------------------- */
+.toast-container .toast {
+  min-width: 320px;
+  max-width: 380px;
+  box-shadow: var(--shadow-soft);
+  border-left: 4px solid var(--secondary) !important;
+}
+.toast-container .toast.toast-success { border-left-color: var(--success) !important; }
+.toast-container .toast.toast-danger { border-left-color: var(--danger) !important; }
+.toast-container .toast.toast-warning { border-left-color: var(--accent) !important; }
+.toast-container .toast.toast-info { border-left-color: var(--secondary) !important; }
+.toast-container .toast .toast-body { color: var(--text); flex: 1; }
+
+/* -------------------- Misc UI polish -------------------- */
+.navbar-brand span { transition: color 0.2s ease; }
+
+.nav-link {
+  position: relative;
+}
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.1rem;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 2px;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease both;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}

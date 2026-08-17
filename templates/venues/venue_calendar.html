@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}{{ venue.name }} - Calendar{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h2 class="mb-1"><i class="bi bi-calendar3 text-info me-2"></i>{{ venue.name }}</h2>
+      <p class="text-muted-custom mb-0">Availability calendar — {{ current_month|date:"F Y" }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-outline-light btn-sm"><i class="bi bi-chevron-left"></i> Prev</a>
+      <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-outline-light btn-sm">Next <i class="bi bi-chevron-right"></i></a>
+    </div>
+  </div>
+
+  <div class="glass-card p-4 mb-4">
+    <div class="table-responsive">
+      <table class="table table-bordered text-center align-middle mb-0" style="table-layout: fixed;">
+      <thead>
+        <tr>
+          <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for week in weeks %}
+        <tr>
+          {% for day in week %}
+          <td class="{% if day.month != current_month.month %}text-muted-custom{% endif %} {% if day == today %}border border-info{% endif %}" style="height: 70px; vertical-align: top;">
+            <div class="small">{{ day.day }}</div>
+            {% if day in busy_days %}
+              <span class="badge-soft danger small mt-1 d-inline-block">Booked</span>
+            {% else %}
+              <span class="badge-soft success small mt-1 d-inline-block">Open</span>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="glass-card p-4 h-100">
+        <div class="dashboard-panel-title"><span><i class="bi bi-ticket-perforated text-info me-2"></i>Bookings this month</span></div>
+        {% if bookings %}
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+          {% for booking in bookings %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div>
+              <p class="mb-0">{{ booking.purpose|default:"Booking" }}</p>
+              <p class="text-muted-custom mb-0 small">{{ booking.start_datetime|date:"M d, g:i A" }} – {{ booking.end_datetime|date:"g:i A" }}</p>
+            </div>
+            {% if booking.booked_by == user or can_manage %}
+            <a href="{% url 'venues:venue_booking_cancel' booking.pk %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No bookings this month.</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="glass-card p-4 h-100">
+        <div class="dashboard-panel-title"><span><i class="bi bi-tools text-info me-2"></i>Maintenance this month</span></div>
+        {% if maintenance %}
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+          {% for m in maintenance %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div>
+              <p class="mb-0">{{ m.reason }}</p>
+              <p class="text-muted-custom mb-0 small">{{ m.start_datetime|date:"M d, g:i A" }} – {{ m.end_datetime|date:"g:i A" }}</p>
+            </div>
+            <form method="post" action="{% url 'venues:maintenance_delete' m.pk %}" onsubmit="return confirm('Remove this maintenance window?');" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No maintenance scheduled this month.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

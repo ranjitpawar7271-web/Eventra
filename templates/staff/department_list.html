@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Departments{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container"><h1>Departments</h1></div>
+</div>
+<div class="container section-sm">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="glass-card p-4">
+        {% if departments %}
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+          {% for dept in departments %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div><p class="mb-0">{{ dept.name }}</p><p class="text-muted-custom small mb-0">{{ dept.description|truncatechars:80 }}</p></div>
+            <form method="post" action="{% url 'staff:department_delete' dept.pk %}" onsubmit="return confirm('Delete this department?');">
+              {% csrf_token %}<button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No departments yet.</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="glass-card p-4">
+        <h5 class="mb-3"><i class="bi bi-plus-circle me-2 text-info"></i>Add Department</h5>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            {{ form.name }}
+            {% for error in form.name.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            {{ form.description }}
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-circle me-2"></i>Add</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

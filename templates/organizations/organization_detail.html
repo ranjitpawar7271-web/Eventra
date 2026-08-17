@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}{{ organization.name }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+      <h1 class="mb-1">{{ organization.name }}</h1>
+      <p class="text-muted-custom mb-0">{{ organization.description }}</p>
+    </div>
+    {% if can_manage %}
+    <div class="d-flex gap-2">
+      <a href="{% url 'organizations:organization_edit' organization.slug %}" class="btn btn-outline-light btn-sm">Edit</a>
+      {% if user.is_super_admin %}
+      <a href="{% url 'organizations:organization_delete' organization.slug %}" class="btn btn-outline-danger btn-sm">Delete</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span>Members ({{ organization.member_count }})</span></div>
+        {% for m in memberships %}
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 divider-soft">
+          <div>
+            {{ m.user.username }}
+            <span class="badge-soft {% if m.role == 'owner' %}accent{% elif m.role == 'admin' %}success{% endif %} ms-2">{{ m.get_role_display }}</span>
+          </div>
+          {% if can_manage %}
+          {% if m.role != 'owner' or is_owner_level %}
+          <form method="post" action="{% url 'organizations:membership_remove' m.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="bi bi-trash"></i></button>
+          </form>
+          {% endif %}
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if can_manage %}
+        <form method="post" action="{% url 'organizations:membership_add' organization.slug %}" class="row g-2 align-items-end mt-3">
+          {% csrf_token %}
+          <div class="col-5">
+            <label class="form-label small">Username</label>
+            {{ member_form.username }}
+          </div>
+          <div class="col-4">
+            <label class="form-label small">Role</label>
+            {{ member_form.role }}
+          </div>
+          <div class="col-3">
+            <button type="submit" class="btn btn-primary w-100">Add</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="glass-card p-4">
+        <div class="dashboard-panel-title"><span>Events ({{ organization.event_count }})</span></div>
+        {% for event in events %}
+        <p class="mb-2"><a href="{{ event.get_absolute_url }}" class="text-reset">{{ event.title }}</a></p>
+        {% empty %}
+        <p class="text-muted-custom mb-0">No events assigned to this organization yet — set it when creating or editing an event.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

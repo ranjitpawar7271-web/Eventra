@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}{{ resource.name }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        {% if resource.image %}
+        <img src="{{ resource.image.url }}" class="w-100 rounded mb-4" style="max-height: 320px; object-fit: cover;" alt="{{ resource.name }}">
+        {% endif %}
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <span class="badge-soft mb-2 d-inline-block">{{ resource.get_category_display }}</span>
+            <h2 class="mb-0">{{ resource.name }}</h2>
+          </div>
+          {% if not resource.is_active %}<span class="badge-soft danger">Inactive</span>{% endif %}
+        </div>
+        <div class="row g-3 my-2">
+          <div class="col-sm-4">
+            <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-stack"></i></div>
+              <div><p class="stat-value">{{ resource.total_quantity }}</p><p class="stat-label">Total {{ resource.unit }}</p></div></div>
+          </div>
+          <div class="col-sm-4">
+            <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-check-circle"></i></div>
+              <div><p class="stat-value">{{ resource.usable_quantity }}</p><p class="stat-label">Usable now</p></div></div>
+          </div>
+          <div class="col-sm-4">
+            <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-exclamation-triangle"></i></div>
+              <div><p class="stat-value">{{ resource.damaged_quantity }}</p><p class="stat-label">Out of service</p></div></div>
+          </div>
+        </div>
+        <p class="mt-3">{{ resource.description|default:"No description provided." }}</p>
+
+        {% if can_manage %}
+        <div class="d-flex gap-2 flex-wrap mt-4">
+          <a href="{% url 'resources:resource_update' resource.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
+          <a href="{% url 'resources:resource_delete' resource.slug %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i>Delete</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-calendar-week text-info me-2"></i>Upcoming Allocations</span></div>
+        {% if upcoming_allocations %}
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+          {% for allocation in upcoming_allocations %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div>
+              <p class="mb-0">{{ allocation.quantity }} {{ resource.unit }} — {{ allocation.purpose|default:"Allocation" }}{% if allocation.event %} for <a href="{{ allocation.event.get_absolute_url }}">{{ allocation.event.title }}</a>{% endif %}</p>
+              <p class="text-muted-custom mb-0 small">{{ allocation.start_datetime|date:"M d, Y g:i A" }} – {{ allocation.end_datetime|date:"g:i A" }} · requested by {{ allocation.requested_by }}</p>
+            </div>
+            <div class="d-flex gap-2">
+              {% if allocation.requested_by == user or can_manage %}
+              <a href="{% url 'resources:resource_allocation_return' allocation.pk %}" class="btn btn-sm btn-outline-light">Return</a>
+              <a href="{% url 'resources:resource_allocation_cancel' allocation.pk %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No upcoming allocations.</p>
+        {% endif %}
+      </div>
+
+      {% if open_damage_reports %}
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-exclamation-triangle text-danger me-2"></i>Open Damage Reports</span></div>
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+          {% for report in open_damage_reports %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div>
+              <p class="mb-0">{{ report.quantity_damaged }} {{ resource.unit }} — {{ report.get_severity_display }}</p>
+              <p class="text-muted-custom mb-0 small">{{ report.description|truncatechars:80 }}</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge-soft {% if report.severity == 'critical' %}danger{% elif report.severity == 'major' %}warning{% endif %}">{{ report.get_status_display }}</span>
+              {% if can_manage %}
+              <form method="post" action="{% url 'resources:damage_report_resolve' report.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-light">Mark Resolved</button>
+              </form>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+      <div class="glass-card p-4 mb-4">
+        <h5 class="mb-3"><i class="bi bi-box-arrow-in-down text-accent me-2"></i>Allocate this Resource</h5>
+        <a href="{% url 'resources:resource_allocate_for' resource.slug %}" class="btn btn-primary w-100">
+          <i class="bi bi-plus-circle me-2"></i>Request Allocation
+        </a>
+      </div>
+      <div class="glass-card p-4">
+        <h5 class="mb-3"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Report Damage</h5>
+        <a href="{% url 'resources:damage_report_create_for' resource.slug %}" class="btn btn-outline-light w-100">
+          <i class="bi bi-flag me-2"></i>File a Damage Report
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

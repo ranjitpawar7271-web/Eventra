@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Certificates — {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active text-muted-custom">Certificates</li>
+    </ol>
+  </nav>
+  <h1 class="mb-4">Certificates</h1>
+
+  <div class="glass-card p-4 mb-4">
+    <div class="dashboard-panel-title"><span>Eligible Attendees ({{ eligible_tickets|length }})</span></div>
+    <p class="text-muted-custom small">Only attendees who actually checked in can receive a certificate.</p>
+    {% if eligible_tickets %}
+    <form method="post" action="{% url 'certificates:certificate_bulk_issue' event.slug %}" class="mb-3">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-award me-2"></i>Issue Certificate of Attendance to All</button>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Attendee</th><th>Ticket</th><th></th></tr></thead>
+      <tbody>
+      {% for ticket in eligible_tickets %}
+      <tr>
+        <td>{{ ticket.participant.get_full_name|default:ticket.participant.username }}</td>
+        <td>{{ ticket.ticket_code }}</td>
+        <td class="text-end">
+          <form method="post" action="{% url 'certificates:certificate_issue' ticket.ticket_code %}" class="d-flex gap-2 justify-content-end align-items-center">
+            {% csrf_token %}
+            {{ form.cert_type }}
+            {{ form.title }}
+            {{ form.badge_level }}
+            <button type="submit" class="btn btn-outline-light btn-sm">Issue</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="text-muted-custom mb-0">No eligible attendees right now — nobody's checked in yet, or everyone who has already has a certificate.</p>
+    {% endif %}
+  </div>
+
+  <div class="glass-card p-4">
+    <div class="dashboard-panel-title"><span>Issued ({{ issued_certificates|length }})</span></div>
+    {% if issued_certificates %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Attendee</th><th>Type</th><th>Title</th><th>Issued</th><th></th></tr></thead>
+      <tbody>
+      {% for cert in issued_certificates %}
+      <tr>
+        <td>{{ cert.participant.get_full_name|default:cert.participant.username }}</td>
+        <td><span class="badge-soft {% if cert.cert_type == 'badge' %}accent{% else %}success{% endif %}">{{ cert.get_cert_type_display }}</span></td>
+        <td>{{ cert.title }}</td>
+        <td class="text-muted-custom small">{{ cert.issued_at|date:"M d, Y" }}</td>
+        <td class="text-end"><a href="{{ cert.get_absolute_url }}" class="btn btn-sm btn-outline-light">View</a></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="text-muted-custom mb-0">No certificates issued yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Something Went Wrong | Eventra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --bg: #F7F7F8; --card: #FFFFFF; --text: #111111; --text-muted: #6B6B6F;
+      --border: #E5E5E7; --primary: #2563EB; --primary-hover: #1D4ED8; --danger: #D92D20;
+    }
+    html[data-theme="dark"] {
+      --bg: #0A0A0A; --card: #151515; --text: #F5F5F7; --text-muted: #A1A1A6;
+      --border: #2C2C2E; --primary: #0A84FF; --primary-hover: #3D9BFF; --danger: #FF453A;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--bg); color: var(--text); font-family: 'Poppins', -apple-system, sans-serif;
+      padding: 1.5rem;
+    }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 3rem 2.5rem; text-align: center; max-width: 480px; width: 100%;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    }
+    .icon-tile {
+      width: 56px; height: 56px; border-radius: 12px; margin: 0 auto 1rem;
+      background: rgba(217,45,32,0.10); color: var(--danger);
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    }
+    h1 { font-size: 2.5rem; font-weight: 700; margin: 0 0 0.25rem; }
+    h2 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.75rem; }
+    p { color: var(--text-muted); margin: 0 0 1.5rem; font-size: 0.95rem; }
+    a.btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--primary); color: #fff; text-decoration: none;
+      padding: 0.65rem 1.5rem; border-radius: 8px; font-weight: 500;
+      transition: background-color 0.15s ease;
+    }
+    a.btn:hover { background: var(--primary-hover); }
+  </style>
+  <script>
+    (function () {
+      try {
+        var mode = window.localStorage.getItem('eventra-theme') || 'dark';
+        var resolved = mode === 'system'
+          ? ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light')
+          : mode;
+        document.documentElement.setAttribute('data-theme', resolved);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-tile"><i class="bi bi-exclamation-octagon"></i></div>
+    <h1>500</h1>
+    <h2>Something went wrong on our end</h2>
+    <p>We've been notified and we're looking into it. Please try again in a few minutes.</p>
+    <a class="btn" href="/"><i class="bi bi-house"></i> Back to Home</a>
+  </div>
+</body>
+</html>

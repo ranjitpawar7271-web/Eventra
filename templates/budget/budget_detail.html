@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% block title %}Budget — {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'budget:budget_list' %}">Budgets</a></li>
+      <li class="breadcrumb-item active text-muted-custom">{{ event.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <h2 class="mb-1">{{ event.title }}</h2>
+      <p class="text-muted-custom mb-0"><a href="{{ event.get_absolute_url }}" class="text-reset">View event</a></p>
+    </div>
+    {% if budget %}
+    <a href="{% url 'budget:budget_setup' event.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-pencil me-1"></i>Edit Estimate</a>
+    {% endif %}
+  </div>
+
+  {% if not budget %}
+  <div class="glass-card p-4 p-md-5 text-center">
+    <i class="bi bi-cash-coin" style="font-size: 2.5rem;"></i>
+    <h4 class="mt-3">No budget set up for this event yet</h4>
+    <p class="text-muted-custom">Set an estimated budget to start tracking expenses, revenue, and profit/loss.</p>
+    <a href="{% url 'budget:budget_setup' event.slug %}" class="btn btn-primary px-4">Set Up Budget</a>
+  </div>
+  {% else %}
+
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-piggy-bank"></i></div>
+        <div><p class="stat-value">₹{{ budget.estimated_budget }}</p><p class="stat-label">Estimated</p></div></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-wallet2"></i></div>
+        <div><p class="stat-value">₹{{ budget.total_expenses }}</p><p class="stat-label">Actual Spent</p></div></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-graph-up-arrow"></i></div>
+        <div><p class="stat-value">₹{{ budget.total_revenue }}</p><p class="stat-label">Revenue</p></div></div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-cash-coin"></i></div>
+        <div><p class="stat-value">₹{{ budget.profit_or_loss }}</p><p class="stat-label">Profit / Loss</p></div></div>
+    </div>
+  </div>
+
+  <div class="glass-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <span class="text-muted-custom">Variance (estimated − spent): </span>
+        <span class="badge-soft {% if budget.is_over_budget %}danger{% else %}success{% endif %}">
+          {% if budget.is_over_budget %}Over budget by ₹{{ budget.variance_abs }}{% else %}₹{{ budget.variance }} remaining{% endif %}
+        </span>
+      </div>
+      {% if budget.percent_spent is not None %}
+      <div class="text-muted-custom small">{{ budget.percent_spent }}% of budget spent</div>
+      {% endif %}
+    </div>
+    {% if budget.percent_spent is not None %}
+    <div class="seats-progress my-3">
+      <div class="seats-progress-bar" style="width: {% if budget.percent_spent > 100 %}100{% else %}{{ budget.percent_spent }}{% endif %}%;"></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="glass-card p-4 mb-4">
+    <div class="dashboard-panel-title"><span><i class="bi bi-pie-chart text-info me-2"></i>Spend by Category</span></div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>Category</th><th>Total</th></tr></thead>
+        <tbody>
+          {% for row in category_breakdown %}
+          <tr><td>{{ row.label }}</td><td>₹{{ row.total }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-muted-custom small mt-2 mb-0">Only approved/paid expenses count toward these totals — pending items aren't final yet.</p>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="glass-card p-4 h-100">
+        <div class="dashboard-panel-title"><span><i class="bi bi-receipt text-info me-2"></i>Expenses</span></div>
+        {% if expenses %}
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-3">
+          {% for expense in expenses %}
+          <li class="border-bottom pb-2 divider-soft">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <p class="mb-0">{{ expense.description }}</p>
+                <p class="text-muted-custom mb-0 small">{{ expense.get_category_display }} · {{ expense.date }}{% if expense.receipt %} · <a href="{{ expense.receipt.url }}" target="_blank">Receipt</a>{% endif %}</p>
+              </div>
+              <span>₹{{ expense.amount }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <form method="post" action="{% url 'budget:expense_status_update' expense.pk %}" class="d-flex gap-2 align-items-center">
+                {% csrf_token %}
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto;">
+                  {% for value, label in expense.STATUS_CHOICES %}
+                  <option value="{{ value }}" {% if expense.status == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+              <form method="post" action="{% url 'budget:expense_delete' expense.pk %}" onsubmit="return confirm('Remove this expense?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom">No expenses logged yet.</p>
+        {% endif %}
+
+        {% if can_manage %}
+        <form method="post" action="{% url 'budget:expense_create' event.slug %}" enctype="multipart/form-data" class="row g-2 align-items-end mt-3 pt-3" style="border-top: 1px solid var(--border);">
+          {% csrf_token %}
+          <div class="col-md-6">
+            <label class="form-label small">Description</label>
+            {{ expense_form.description }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Category</label>
+            {{ expense_form.category }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Amount (₹)</label>
+            {{ expense_form.amount }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Date</label>
+            {{ expense_form.date }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Status</label>
+            {{ expense_form.status }}
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Receipt (optional)</label>
+            {{ expense_form.receipt }}
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-sm mt-2"><i class="bi bi-plus-circle me-1"></i>Log Expense</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="glass-card p-4 h-100">
+        <div class="dashboard-panel-title"><span><i class="bi bi-graph-up-arrow text-info me-2"></i>Revenue</span></div>
+        {% if revenue_entries %}
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-3">
+          {% for entry in revenue_entries %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div>
+              <p class="mb-0">{{ entry.get_source_display }}{% if entry.sponsor_name %} — {{ entry.sponsor_name }}{% endif %}</p>
+              <p class="text-muted-custom mb-0 small">{{ entry.description }}{% if entry.description %} · {% endif %}{{ entry.date }}</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span>₹{{ entry.amount }}</span>
+              {% if can_manage %}
+              <form method="post" action="{% url 'budget:revenue_delete' entry.pk %}" onsubmit="return confirm('Remove this revenue entry?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+              </form>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom">No revenue recorded yet.</p>
+        {% endif %}
+
+        {% if can_manage %}
+        <form method="post" action="{% url 'budget:revenue_create' event.slug %}" class="row g-2 align-items-end mt-3 pt-3" style="border-top: 1px solid var(--border);">
+          {% csrf_token %}
+          <div class="col-md-6">
+            <label class="form-label small">Source</label>
+            {{ revenue_form.source }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Sponsor Name (if sponsorship)</label>
+            {{ revenue_form.sponsor_name }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Amount (₹)</label>
+            {{ revenue_form.amount }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Date</label>
+            {{ revenue_form.date }}
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Description (optional)</label>
+            {{ revenue_form.description }}
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-sm mt-2"><i class="bi bi-plus-circle me-1"></i>Record Revenue</button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <p class="text-muted-custom small mt-4 mb-0">
+    <i class="bi bi-info-circle me-1"></i>Vendor payments recorded in the Vendors module are included in "Actual Spent" automatically
+    once they're marked paid — no need to log them here separately.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

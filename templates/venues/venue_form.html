@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4"><i class="bi bi-building-add me-2 text-info"></i>{{ title }}</h3>
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+          <div class="mb-3">
+            <label class="form-label">Venue Name</label>
+            {{ form.name }}
+            {% for error in form.name.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Address</label>
+            {{ form.address }}
+            {% for error in form.address.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">City</label>
+              {{ form.city }}
+              {% for error in form.city.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Capacity</label>
+              {{ form.capacity }}
+              {% for error in form.capacity.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Facilities</label>
+            {{ form.facilities }}
+            {% for error in form.facilities.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            {{ form.description }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Venue Image</label>
+            {{ form.image }}
+            {% if venue.image %}<p class="small text-muted-custom mt-2">Current: {{ venue.image.name }}</p>{% endif %}
+          </div>
+          <div class="form-check mb-4">
+            {{ form.is_active }}
+            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active (visible for booking)</label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-2"></i>Save Venue</button>
+            <a href="{% if venue %}{{ venue.get_absolute_url }}{% else %}{% url 'venues:venue_list' %}{% endif %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

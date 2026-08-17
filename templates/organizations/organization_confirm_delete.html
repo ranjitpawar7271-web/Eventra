@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Delete Organization{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="glass-card p-4 p-md-5 text-center">
+        <h3 class="mb-2">Delete "{{ organization.name }}"?</h3>
+        <p class="text-muted-custom mb-4">Events that belong to this organization aren't deleted — they just lose their organization link.</p>
+        <form method="post" class="d-flex gap-2 justify-content-center">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger px-4">Yes, Delete</button>
+          <a href="{{ organization.get_absolute_url }}" class="btn btn-outline-light px-4">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

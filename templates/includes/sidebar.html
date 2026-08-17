@@ -1,0 +1,107 @@
+<button type="button" class="sidebar-mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('sidebar-open'); document.querySelector('.sidebar-backdrop').classList.toggle('active'); this.classList.toggle('active');" aria-label="Toggle menu">
+  <i class="bi bi-list"></i>
+</button>
+<div class="sidebar-backdrop" onclick="document.querySelector('.sidebar').classList.remove('sidebar-open'); this.classList.remove('active'); document.querySelector('.sidebar-mobile-toggle').classList.remove('active');"></div>
+<aside class="sidebar">
+  <div class="sidebar-brand"><i class="bi bi-calendar-event-fill text-info me-2"></i>Eventra</div>
+  <nav class="nav flex-column">
+    <a class="nav-link {% if request.resolver_match.view_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:dashboard' %}">
+      <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'activity_feed' %}active{% endif %}" href="{% url 'dashboard:activity_feed' %}">
+      <i class="bi bi-activity"></i> My Activity
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'event_list' %}active{% endif %}" href="{% url 'events:event_list' %}">
+      <i class="bi bi-calendar-event"></i> All Events
+    </a>
+    {% if user.can_manage_events %}
+    <a class="nav-link {% if request.resolver_match.view_name == 'my_events' %}active{% endif %}" href="{% url 'events:my_events' %}">
+      <i class="bi bi-calendar-check"></i> My Events
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'event_create' %}active{% endif %}" href="{% url 'events:event_create' %}">
+      <i class="bi bi-plus-circle"></i> Create Event
+    </a>
+    {% endif %}
+    <a class="nav-link {% if request.resolver_match.view_name == 'my_registrations' %}active{% endif %}" href="{% url 'events:my_registrations' %}">
+      <i class="bi bi-ticket-perforated"></i> My Registrations
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}" href="{% url 'workflow:calendar' %}">
+      <i class="bi bi-calendar3"></i> Calendar
+    </a>
+    <a class="nav-link {% if request.resolver_match.app_name == 'wishlist' %}active{% endif %}" href="{% url 'wishlist:wishlist_list' %}">
+      <i class="bi bi-heart"></i> My Wishlist
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'my_tasks' %}active{% endif %}" href="{% url 'tasks:my_tasks' %}">
+      <i class="bi bi-kanban"></i> My Tasks
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'my_certificates' %}active{% endif %}" href="{% url 'certificates:my_certificates' %}">
+      <i class="bi bi-award"></i> My Certificates
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'faq_list' %}active{% endif %}" href="{% url 'support:faq_list' %}">
+      <i class="bi bi-question-circle"></i> Help Center
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'announcement_list' %}active{% endif %}" href="{% url 'support:announcement_list' %}">
+      <i class="bi bi-megaphone"></i> Announcements
+    </a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'support_contact' %}active{% endif %}" href="{% url 'support:support_contact' %}">
+      <i class="bi bi-life-preserver"></i> Contact Support
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'my_tickets' %}active{% endif %}" href="{% url 'tickets:my_tickets' %}">
+      <i class="bi bi-qr-code"></i> My Tickets
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'my_payments' %}active{% endif %}" href="{% url 'payments:my_payments' %}">
+      <i class="bi bi-credit-card"></i> My Payments
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'category_list' %}active{% endif %}" href="{% url 'categories:category_list' %}">
+      <i class="bi bi-tags"></i> Categories
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'venue_list' %}active{% endif %}" href="{% url 'venues:venue_list' %}">
+      <i class="bi bi-building"></i> Venues
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'resource_list' %}active{% endif %}" href="{% url 'resources:resource_list' %}">
+      <i class="bi bi-box-seam"></i> Resources
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'vendor_list' %}active{% endif %}" href="{% url 'vendors:vendor_list' %}">
+      <i class="bi bi-truck"></i> Vendors
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'staff_list' %}active{% endif %}" href="{% url 'staff:staff_list' %}">
+      <i class="bi bi-person-badge"></i> Staff
+    </a>
+    {% if user.can_manage_events %}
+    <a class="nav-link {% if request.resolver_match.view_name == 'budget_list' %}active{% endif %}" href="{% url 'budget:budget_list' %}">
+      <i class="bi bi-cash-coin"></i> Budgets
+    </a>
+    <a class="nav-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}" href="{% url 'reports:report_hub' %}">
+      <i class="bi bi-graph-up"></i> Reports & Analytics
+    </a>
+    <a class="nav-link {% if request.resolver_match.app_name == 'sponsors' %}active{% endif %}" href="{% url 'sponsors:sponsor_list' %}">
+      <i class="bi bi-award"></i> Sponsors
+    </a>
+    {% endif %}
+    {% if user.is_super_admin or user.is_staff_role %}
+    <a class="nav-link {% if request.resolver_match.url_name == 'support_inbox' %}active{% endif %}" href="{% url 'support:support_inbox' %}">
+      <i class="bi bi-inbox"></i> Support Inbox
+    </a>
+    {% endif %}
+    {% if user.is_authenticated %}
+    <a class="nav-link {% if request.resolver_match.app_name == 'organizations' %}active{% endif %}" href="{% url 'organizations:organization_list' %}">
+      <i class="bi bi-buildings"></i> Organizations
+    </a>
+    {% endif %}
+    {% if user.is_super_admin %}
+    <a class="nav-link {% if request.resolver_match.app_name == 'ops' %}active{% endif %}" href="{% url 'ops:system_health' %}">
+      <i class="bi bi-heart-pulse"></i> System Health
+    </a>
+    <a class="nav-link {% if request.resolver_match.app_name == 'platform_settings' %}active{% endif %}" href="{% url 'platform_settings:settings_edit' %}">
+      <i class="bi bi-gear"></i> Platform Settings
+    </a>
+    {% endif %}
+    <hr class="divider-soft">
+    <a class="nav-link {% if request.resolver_match.view_name == 'profile' %}active{% endif %}" href="{% url 'users:profile' %}">
+      <i class="bi bi-person"></i> Profile
+    </a>
+    <a class="nav-link {% if request.resolver_match.view_name == 'edit_profile' %}active{% endif %}" href="{% url 'users:edit_profile' %}">
+      <i class="bi bi-gear"></i> Settings
+    </a>
+  </nav>
+</aside>

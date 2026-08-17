@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Checkout - {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm" style="max-width: 560px;">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active text-muted-custom">Checkout</li>
+    </ol>
+  </nav>
+
+  <div class="glass-card p-4">
+    <h3 class="mb-1">Complete Your Registration</h3>
+    <p class="text-muted-custom mb-4">{{ event.title }}</p>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <span class="text-muted-custom">Amount Due</span>
+      <span class="fs-3 fw-bold">₹{{ payment.amount }}</span>
+    </div>
+
+    <div class="alert alert-info small mb-4">
+      <i class="bi bi-shield-lock me-1"></i>
+      This is a demo payment flow. No real card or bank details are collected — just choose a method below.
+    </div>
+
+    <form method="post" action="{% url 'payments:process_payment' payment.id %}">
+      {% csrf_token %}
+      <label class="form-label">Payment Method</label>
+      <div class="d-grid gap-2 mb-4">
+        {% for value, label in methods %}
+        <label class="glass-card p-3 d-flex align-items-center gap-2" style="cursor:pointer;">
+          <input type="radio" name="payment_method" value="{{ value }}" {% if forloop.first %}checked{% endif %} required>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="d-grid gap-2">
+        <button type="submit" name="action" value="pay" class="btn btn-primary"><i class="bi bi-lock-fill me-2"></i>Pay ₹{{ payment.amount }}</button>
+        <button type="submit" name="action" value="simulate_failure" class="btn btn-outline-light btn-sm">Simulate Payment Failure (demo)</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}{{ venue.name }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        {% if venue.image %}
+        <img src="{{ venue.image.url }}" class="w-100 rounded mb-4" style="max-height: 360px; object-fit: cover;" alt="{{ venue.name }}">
+        {% endif %}
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <h2 class="mb-0">{{ venue.name }}</h2>
+          {% if not venue.is_active %}<span class="badge-soft danger">Inactive</span>{% endif %}
+        </div>
+        <div class="event-meta mb-2"><i class="bi bi-geo-alt"></i> {{ venue.address }}, {{ venue.city }}</div>
+        <div class="event-meta mb-2"><i class="bi bi-people"></i> Capacity: {{ venue.capacity }} people</div>
+        {% if venue.facility_list %}
+        <div class="d-flex flex-wrap gap-2 my-3">
+          {% for facility in venue.facility_list %}
+          <span class="badge-soft success">{{ facility }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <p class="mt-3">{{ venue.description|default:"No description provided." }}</p>
+
+        {% if can_manage %}
+        <div class="d-flex gap-2 flex-wrap mt-4">
+          <a href="{% url 'venues:venue_update' venue.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
+          <a href="{% url 'venues:venue_delete' venue.slug %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1"></i>Delete</a>
+          <a href="{% url 'venues:maintenance_create' venue.slug %}" class="btn btn-outline-light btn-sm"><i class="bi bi-tools me-1"></i>Schedule Maintenance</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-calendar-week text-info me-2"></i>Upcoming Bookings</span></div>
+        {% if upcoming_bookings %}
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+          {% for booking in upcoming_bookings %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div>
+              <p class="mb-0">{{ booking.purpose|default:"Booking" }}</p>
+              <p class="text-muted-custom mb-0 small">{{ booking.start_datetime|date:"M d, Y g:i A" }} – {{ booking.end_datetime|date:"g:i A" }}</p>
+            </div>
+            <span class="badge-soft success">{{ booking.get_status_display }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No upcoming bookings.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="glass-card p-4">
+        <h5 class="mb-3"><i class="bi bi-calendar-check text-accent me-2"></i>Book this Venue</h5>
+        <a href="{% url 'venues:venue_booking_create_for' venue.slug %}" class="btn btn-primary w-100 mb-2">
+          <i class="bi bi-calendar-plus me-2"></i>Book Now
+        </a>
+        <a href="{% url 'venues:venue_calendar' venue.slug %}" class="btn btn-outline-light w-100">
+          <i class="bi bi-calendar3 me-2"></i>View Availability Calendar
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

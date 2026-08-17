@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Staff{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Staff Directory</h1>
+      <p class="text-muted-custom mb-0">Team members, departments, and shift assignments.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      {% if is_staff_admin %}
+      <a href="{% url 'staff:department_list' %}" class="btn btn-outline-light"><i class="bi bi-diagram-3 me-2"></i>Departments</a>
+      <a href="{% url 'staff:staff_onboard' %}" class="btn btn-primary"><i class="bi bi-person-plus me-2"></i>Onboard Staff</a>
+      {% endif %}
+      {% if can_manage_shifts %}
+      <a href="{% url 'staff:shift_auto_assign' %}" class="btn btn-outline-light"><i class="bi bi-magic me-2"></i>Auto-Assign</a>
+      <a href="{% url 'staff:shift_assign' %}" class="btn btn-outline-light"><i class="bi bi-calendar-plus me-2"></i>Assign Shift</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card filter-bar mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <label class="form-label">Department</label>
+        <select name="department" class="form-select" onchange="this.form.submit()">
+          <option value="">All Departments</option>
+          {% for dept in departments %}
+          <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:'s' %}selected{% endif %}>{{ dept.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-4">
+    {% for member in staff_members %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card p-3 h-100 d-flex flex-column">
+        <h5 class="mb-1"><a href="{% url 'staff:staff_detail' member.pk %}" class="text-reset">{{ member.user.get_full_name|default:member.user.username }}</a></h5>
+        <p class="text-muted-custom small mb-1">{{ member.employee_id }} {% if member.designation %}· {{ member.designation }}{% endif %}</p>
+        {% if member.department %}<span class="badge-soft mb-2 align-self-start">{{ member.department.name }}</span>{% endif %}
+        {% if member.skill_list %}
+        <div class="d-flex flex-wrap gap-1 mt-auto pt-2">
+          {% for skill in member.skill_list|slice:":3" %}<span class="badge-soft success small">{{ skill }}</span>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-person-badge d-block mb-3"></i>
+        <h5>No staff found</h5>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

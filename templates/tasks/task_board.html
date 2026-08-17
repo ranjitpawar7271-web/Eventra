@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Task Board — {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <nav aria-label="breadcrumb" class="mb-1">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+          <li class="breadcrumb-item active text-muted-custom">Task Board</li>
+        </ol>
+      </nav>
+      <h1 class="mb-0">Task Board</h1>
+    </div>
+    {% if can_manage %}
+    <a href="{% url 'tasks:task_create' event.slug %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Task</a>
+    {% endif %}
+  </div>
+
+  {% if event.preparation_progress is not None %}
+  <div class="glass-card p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="fw-semibold">Event Preparation Progress</span>
+      <span class="fw-bold">{{ event.preparation_progress }}%</span>
+    </div>
+    <div class="seats-progress">
+      <div class="seats-progress-bar" style="width: {{ event.preparation_progress }}%;"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row g-3 flex-nowrap" style="overflow-x: auto;">
+    {% for column in columns %}
+    <div class="col-10 col-md-4 col-lg-3" style="min-width: 260px;">
+      <div class="glass-card p-3 h-100">
+        <div class="dashboard-panel-title mb-3">
+          <span>{{ column.label }}</span>
+          <span class="badge-soft">{{ column.tasks|length }}</span>
+        </div>
+        <div class="d-flex flex-column gap-2">
+          {% for task in column.tasks %}
+          <a href="{% url 'tasks:task_detail' task.pk %}" class="text-reset text-decoration-none">
+            <div class="glass-card p-3" style="background: rgba(255,255,255,0.04);">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <span class="fw-semibold">{{ task.title }}</span>
+                <span class="badge-soft {% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% else %}success{% endif %}">{{ task.get_priority_display }}</span>
+              </div>
+              {% if task.assigned_to %}
+              <div class="text-muted-custom small"><i class="bi bi-person"></i> {{ task.assigned_to.username }}</div>
+              {% endif %}
+              {% if task.due_date %}
+              <div class="small {% if task.is_overdue %}text-danger{% else %}text-muted-custom{% endif %}">
+                <i class="bi bi-calendar3"></i> {{ task.due_date|date:"M d" }}{% if task.is_overdue %} (overdue){% endif %}
+              </div>
+              {% endif %}
+            </div>
+          </a>
+          {% empty %}
+          <p class="text-muted-custom small mb-0">No tasks here.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

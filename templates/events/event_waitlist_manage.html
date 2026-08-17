@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Waitlist - {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'events:event_list' %}">Events</a></li>
+      <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active text-muted-custom">Waitlist</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h2 class="mb-1">Waitlist</h2>
+      <p class="text-muted-custom mb-0">{{ event.title }} &middot; {{ entries|length }} waiting &middot; {{ event.seats_taken }}/{{ event.capacity }} seats filled</p>
+    </div>
+    <a href="{{ event.get_absolute_url }}" class="btn btn-outline-light"><i class="bi bi-arrow-left me-2"></i>Back to Event</a>
+  </div>
+
+  <div class="glass-card p-4">
+    {% if entries %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Participant</th>
+            <th>Email</th>
+            <th>Joined</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in entries %}
+          <tr>
+            <td>#{{ entry.position }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="icon-tile" style="width:38px; height:38px; font-size:0.95rem; border-radius:50%;">{{ entry.user.initials }}</div>
+                <span>{{ entry.user.get_full_name|default:entry.user.username }}</span>
+              </div>
+            </td>
+            <td>{{ entry.user.email|default:"—" }}</td>
+            <td>{{ entry.joined_at|date:"M d, Y - g:i A" }}</td>
+            <td>
+              {% if entry.status == 'notified' %}
+                <span class="badge-soft warning">Notified — expires {{ entry.invitation_expires_at|date:"M d, g:i A" }}</span>
+              {% else %}
+                <span class="badge-soft">Waiting</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-hourglass-split d-block mb-3"></i>
+      <h5>No one is waiting</h5>
+      <p class="text-muted-custom mb-0">Once this event reaches capacity, people who try to register will be able to join the waitlist here.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

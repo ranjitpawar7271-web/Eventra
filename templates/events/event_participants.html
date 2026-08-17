@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Participants - {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'events:event_list' %}">Events</a></li>
+      <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active text-muted-custom">Participants</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h2 class="mb-1">Participants</h2>
+      <p class="text-muted-custom mb-0">{{ event.title }} &middot; {{ event.seats_taken }}/{{ event.capacity }} registered</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'events:event_participants_export' event.slug %}?q={{ query }}&status={{ status_filter }}&payment={{ payment_filter }}&attendance={{ attendance_filter }}" class="btn btn-outline-light"><i class="bi bi-download me-2"></i>Export CSV</a>
+      <a href="{{ event.get_absolute_url }}" class="btn btn-outline-light"><i class="bi bi-arrow-left me-2"></i>Back to Event</a>
+    </div>
+  </div>
+
+  <div class="glass-card filter-bar mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label">Search Participants</label>
+        <div class="input-icon-group">
+          <i class="bi bi-search form-icon"></i>
+          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by name, username or email...">
+        </div>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Registration</label>
+        <select name="status" class="form-select">
+          <option value="">All</option>
+          <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+          {% if is_paid_event %}<option value="pending_payment" {% if status_filter == 'pending_payment' %}selected{% endif %}>Pending Payment</option>{% endif %}
+        </select>
+      </div>
+      {% if is_paid_event %}
+      <div class="col-md-2">
+        <label class="form-label">Payment</label>
+        <select name="payment" class="form-select">
+          <option value="">All</option>
+          <option value="paid" {% if payment_filter == 'paid' %}selected{% endif %}>Paid</option>
+          <option value="unpaid" {% if payment_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
+          <option value="refunded" {% if payment_filter == 'refunded' %}selected{% endif %}>Refunded</option>
+        </select>
+      </div>
+      {% endif %}
+      <div class="col-md-2">
+        <label class="form-label">Attendance</label>
+        <select name="attendance" class="form-select">
+          <option value="">All</option>
+          <option value="checked_in" {% if attendance_filter == 'checked_in' %}selected{% endif %}>Checked In</option>
+          <option value="not_arrived" {% if attendance_filter == 'not_arrived' %}selected{% endif %}>Not Arrived</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="glass-card p-4">
+    {% if participants %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Participant</th>
+            <th>Email</th>
+            <th>Registration</th>
+            {% if is_paid_event %}<th>Payment</th>{% endif %}
+            <th>Attendance</th>
+            <th>Ticket</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for reg in participants %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="icon-tile" style="width:38px; height:38px; font-size:0.95rem; border-radius:50%;">{{ reg.user.initials }}</div>
+                <span>{{ reg.user.get_full_name|default:reg.user.username }}</span>
+              </div>
+            </td>
+            <td>{{ reg.user.email|default:"—" }}</td>
+            <td><span class="badge-soft {% if reg.status == 'confirmed' %}success{% else %}warning{% endif %}">{{ reg.get_status_display }}</span></td>
+            {% if is_paid_event %}
+            <td>
+              {% with payment=reg.payments.first %}
+              {% if payment %}
+              <span class="badge-soft {% if payment.status == 'successful' %}success{% elif payment.status == 'failed' %}danger{% elif payment.status == 'refunded' %}warning{% endif %}">{{ payment.get_status_display }}</span>
+              {% else %}<span class="text-muted-custom">—</span>{% endif %}
+              {% endwith %}
+            </td>
+            {% endif %}
+            <td>
+              {% if reg.ticket.status == 'checked_in' %}
+              <span class="badge-soft success"><i class="bi bi-check-circle me-1"></i>Checked In</span>
+              {% elif reg.status == 'confirmed' %}
+              <span class="badge-soft">Not Arrived</span>
+              {% else %}
+              <span class="text-muted-custom">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if reg.ticket %}
+              <a href="{% url 'tickets:ticket_detail' reg.ticket.ticket_code %}" class="badge-soft text-decoration-none {% if reg.ticket.status == 'checked_in' %}success{% elif reg.ticket.status == 'cancelled' or reg.ticket.status == 'refunded' %}danger{% endif %}">
+                <i class="bi bi-qr-code me-1"></i>{{ reg.ticket.get_status_display }}
+              </a>
+              {% else %}
+              <span class="text-muted-custom">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-people d-block mb-3"></i>
+      <h5>No participants yet</h5>
+      <p class="text-muted-custom mb-0">
+        {% if query %}No participants match "{{ query }}".{% else %}Once people register, they'll show up here.{% endif %}
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

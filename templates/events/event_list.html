@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load i18n currency_tags %}
+{% block title %}Events{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container text-center">
+    <h1>Explore Events</h1>
+    <p class="text-muted-custom fs-5">Find events that match your interests, all in one place.</p>
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card filter-bar mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label">Search</label>
+        <div class="input-icon-group">
+          <i class="bi bi-search form-icon"></i>
+          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by title, description, organizer...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Category</label>
+        <select name="category" class="form-select">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+          <option value="{{ cat.slug }}" {% if cat.slug == selected_category %}selected{% endif %}>{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Sort By</label>
+        <select name="sort" class="form-select">
+          <option value="" {% if not selected_sort %}selected{% endif %}>Date</option>
+          <option value="upcoming" {% if selected_sort == 'upcoming' %}selected{% endif %}>Upcoming</option>
+          <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest</option>
+          <option value="popular" {% if selected_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+          <option value="rating" {% if selected_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+          <option value="price_low" {% if selected_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_high" {% if selected_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+        </select>
+      </div>
+
+      <div class="col-12">
+        <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="{% if selected_location or selected_organizer or selected_date_range or selected_price_type or selected_price_min or selected_price_max or selected_availability or selected_min_rating %}true{% else %}false{% endif %}">
+          <i class="bi bi-sliders me-1"></i>More Filters
+        </button>
+      </div>
+
+      <div class="collapse col-12 {% if selected_location or selected_organizer or selected_date_range or selected_price_type or selected_price_min or selected_price_max or selected_availability or selected_min_rating %}show{% endif %}" id="advancedFilters">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Location</label>
+            <input type="text" name="location" value="{{ selected_location }}" class="form-control" placeholder="City, venue...">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Organizer</label>
+            <select name="organizer" class="form-select">
+              <option value="">Any Organizer</option>
+              {% for org in organizers %}
+              <option value="{{ org.id }}" {% if selected_organizer == org.id|stringformat:"s" %}selected{% endif %}>{{ org.get_full_name|default:org.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Date</label>
+            <select name="date_range" class="form-select">
+              <option value="">Any Date</option>
+              <option value="today" {% if selected_date_range == 'today' %}selected{% endif %}>Today</option>
+              <option value="this_week" {% if selected_date_range == 'this_week' %}selected{% endif %}>This Week</option>
+              <option value="this_month" {% if selected_date_range == 'this_month' %}selected{% endif %}>This Month</option>
+              <option value="upcoming" {% if selected_date_range == 'upcoming' %}selected{% endif %}>Upcoming</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Availability</label>
+            <select name="availability" class="form-select">
+              <option value="">Any</option>
+              <option value="available" {% if selected_availability == 'available' %}selected{% endif %}>Open Seats</option>
+              <option value="full" {% if selected_availability == 'full' %}selected{% endif %}>Sold Out</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Price</label>
+            <select name="price_type" class="form-select">
+              <option value="">Free & Paid</option>
+              <option value="free" {% if selected_price_type == 'free' %}selected{% endif %}>Free Only</option>
+              <option value="paid" {% if selected_price_type == 'paid' %}selected{% endif %}>Paid Only</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Min Price</label>
+            <input type="number" name="price_min" value="{{ selected_price_min }}" class="form-control" min="0" step="1">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Max Price</label>
+            <input type="number" name="price_max" value="{{ selected_price_max }}" class="form-control" min="0" step="1">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Min Rating</label>
+            <select name="min_rating" class="form-select">
+              <option value="">Any Rating</option>
+              <option value="4" {% if selected_min_rating == '4' %}selected{% endif %}>4+ Stars</option>
+              <option value="3" {% if selected_min_rating == '3' %}selected{% endif %}>3+ Stars</option>
+              <option value="2" {% if selected_min_rating == '2' %}selected{% endif %}>2+ Stars</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-12 d-flex gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Apply Filters</button>
+        <a href="{% url 'events:event_list' %}" class="btn btn-outline-light">Clear</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-4">
+    {% for event in page_obj %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card event-card h-100 d-flex flex-column fade-in-up" style="position: relative;">
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'wishlist:toggle_favorite' event.slug %}" style="position: absolute; top: 10px; right: 10px; z-index: 2;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="btn btn-sm btn-outline-light" style="border-radius: 50%; width: 36px; height: 36px; padding: 0;" title="{% if event.id in favorited_event_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}">
+            <i class="bi {% if event.id in favorited_event_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+          </button>
+        </form>
+        {% endif %}
+        {% if event.image %}
+          <img src="{{ event.image.url }}" class="event-card-image" alt="{{ event.title }}">
+        {% else %}
+          <div class="event-card-placeholder"><i class="bi bi-calendar-event"></i></div>
+        {% endif %}
+        <div class="event-card-body d-flex flex-column flex-grow-1">
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            {% if event.category %}<span class="badge-soft d-inline-block">{{ event.category.name }}</span>{% endif %}
+            {% if event.is_full %}<span class="badge-soft danger d-inline-block">Sold Out</span>
+            {% elif event.seats_left <= 5 %}<span class="badge-soft accent d-inline-block">Only {{ event.seats_left }} left</span>{% endif %}
+          </div>
+          <h5 class="mb-2"><a href="{{ event.get_absolute_url }}" class="text-reset">{{ event.title }}</a></h5>
+          {% if event.average_rating %}
+          <div class="event-meta"><i class="bi bi-star-fill text-warning"></i> {{ event.average_rating }} ({{ event.review_count }})</div>
+          {% endif %}
+          <div class="event-meta"><i class="bi bi-calendar3"></i> {{ event.start_date|date:"M d, Y - g:i A" }}</div>
+          <div class="event-meta"><i class="bi bi-geo-alt"></i> {{ event.location }}</div>
+          <div class="event-meta"><i class="bi bi-people"></i> {{ event.seats_taken }}/{{ event.capacity }} registered</div>
+          <div class="seats-progress my-2">
+            <div class="seats-progress-bar" style="width: {% widthratio event.seats_taken event.capacity 100 %}%;"></div>
+          </div>
+          <div class="mt-auto d-flex justify-content-between align-items-center pt-3">
+            <span class="fw-semibold">{% if event.is_free %}{% trans "Free" %}{% else %}{% display_price event.price %}{% endif %}</span>
+            <a href="{{ event.get_absolute_url }}" class="btn btn-sm btn-outline-light">View Details</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-calendar-x d-block mb-3"></i>
+        <h5>No events found</h5>
+        <p class="text-muted-custom">Try adjusting your search or filters.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-5">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">Previous</a></li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">{{ num }}</a></li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">Next</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

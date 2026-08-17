@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Certificate Verification{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="glass-card p-4 p-md-5 text-center">
+        {% if certificate and not revoked %}
+          <div class="icon-tile icon-tile-success mx-auto mb-3"><i class="bi bi-patch-check-fill"></i></div>
+          <h3 class="mb-2 text-success">Valid Certificate</h3>
+          <p class="text-muted-custom mb-4">This certificate was issued by Eventra and matches our records.</p>
+          <div class="text-start mx-auto" style="max-width: 360px;">
+            <p class="mb-1"><strong>Title:</strong> {{ certificate.title }}</p>
+            <p class="mb-1"><strong>Type:</strong> {{ certificate.get_cert_type_display }}</p>
+            <p class="mb-1"><strong>Issued to:</strong> {{ certificate.participant.get_full_name|default:certificate.participant.username }}</p>
+            <p class="mb-1"><strong>Event:</strong> {{ certificate.event.title }}</p>
+            <p class="mb-1"><strong>Issued on:</strong> {{ certificate.issued_at|date:"F d, Y" }}</p>
+            <p class="mb-0"><strong>Certificate No.:</strong> {{ certificate.certificate_code }}</p>
+          </div>
+        {% elif certificate and revoked %}
+          <div class="icon-tile icon-tile-danger mx-auto mb-3"><i class="bi bi-x-octagon-fill"></i></div>
+          <h3 class="mb-2 text-danger">Certificate Revoked</h3>
+          <p class="text-muted-custom mb-0">This certificate's number matches our records, but it has since been revoked and is no longer valid.</p>
+        {% else %}
+          <div class="icon-tile icon-tile-danger mx-auto mb-3"><i class="bi bi-x-octagon-fill"></i></div>
+          <h3 class="mb-2 text-danger">Not a Valid Certificate</h3>
+          <p class="text-muted-custom mb-0">We couldn't verify this certificate. The link may be broken, tampered with, or the certificate may not exist in our records.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

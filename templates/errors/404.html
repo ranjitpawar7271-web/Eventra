@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Page Not Found{% endblock %}
+{% block content %}
+<div class="container section text-center">
+  <div class="glass-card p-5 mx-auto" style="max-width: 560px;">
+    <h1 class="display-1 fw-bold text-info mb-0">404</h1>
+    <h3 class="mb-3">Page Not Found</h3>
+    <p class="text-muted-custom mb-4">The page you're looking for doesn't exist or may have been moved.</p>
+    <a href="{% url 'pages:home' %}" class="btn btn-primary px-4"><i class="bi bi-house me-2"></i>Back to Home</a>
+  </div>
+</div>
+{% endblock %}

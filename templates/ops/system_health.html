@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}System Health{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <h1 class="mb-4">System Health</h1>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="glass-card p-4 text-center">
+        <div class="icon-tile mx-auto mb-2 {% if db_ok %}text-success{% else %}text-danger{% endif %}">
+          <i class="bi {% if db_ok %}bi-database-check{% else %}bi-database-x{% endif %}"></i>
+        </div>
+        <h5>{% if db_ok %}Database OK{% else %}Database Error{% endif %}</h5>
+        {% if not db_ok %}<p class="text-danger small mb-0">{{ db_error }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="glass-card p-4 text-center">
+        <div class="icon-tile mx-auto mb-2 {% if pending_migrations == 0 %}text-success{% else %}text-warning{% endif %}">
+          <i class="bi bi-arrow-repeat"></i>
+        </div>
+        <h5>
+          {% if pending_migrations is None %}Unknown{% elif pending_migrations == 0 %}Up to Date{% else %}{{ pending_migrations }} Pending{% endif %}
+        </h5>
+        <p class="text-muted-custom small mb-0">Migrations</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="glass-card p-4 text-center">
+        <div class="icon-tile mx-auto mb-2 {% if debug_mode %}text-warning{% else %}text-success{% endif %}">
+          <i class="bi bi-shield-check"></i>
+        </div>
+        <h5>DEBUG = {{ debug_mode }}</h5>
+        <p class="text-muted-custom small mb-0">Django {{ django_version }} · Python {{ python_version }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-card p-4 mb-4">
+    <div class="dashboard-panel-title"><span>Data Snapshot</span></div>
+    <div class="row g-3">
+      {% for item in model_counts %}
+      <div class="col-6 col-md-3">
+        <p class="text-muted-custom small mb-0">{{ item.label }}</p>
+        <p class="fs-4 fw-bold mb-0">{{ item.count }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="glass-card p-4 mb-4">
+    <div class="dashboard-panel-title"><span>Backup & Restore</span></div>
+    <p class="text-muted-custom small">Backups are a full JSON export of your data (excluding sessions and content-type tables, which regenerate automatically).</p>
+    <div class="d-flex gap-2">
+      <form method="post" action="{% url 'ops:backup_create' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-download me-2"></i>Download Backup</button>
+      </form>
+      <a href="{% url 'ops:restore_upload' %}" class="btn btn-outline-danger"><i class="bi bi-upload me-2"></i>Restore from Backup</a>
+    </div>
+  </div>
+
+  <div class="glass-card p-4">
+    <div class="dashboard-panel-title"><span>Recent Backup/Restore Activity</span></div>
+    {% for log in recent_backups %}
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 divider-soft">
+      <div>
+        <span class="badge-soft {% if log.status == 'success' %}success{% else %}danger{% endif %}">{{ log.get_action_display }} — {{ log.get_status_display }}</span>
+        <span class="text-muted-custom small ms-2">{{ log.filename }}</span>
+      </div>
+      <span class="text-muted-custom small">{{ log.performed_by.username|default:"—" }} · {{ log.created_at|date:"M d, Y g:i A" }}</span>
+    </div>
+    {% empty %}
+    <p class="text-muted-custom mb-0">No backup or restore activity yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

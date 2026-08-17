@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Schedule Maintenance{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4"><i class="bi bi-tools me-2 text-info"></i>Schedule Maintenance — {{ venue.name }}</h3>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+          {{ form.venue.as_hidden }}
+          <div class="mb-3">
+            <label class="form-label">Reason</label>
+            {{ form.reason }}
+            {% for error in form.reason.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Start</label>
+              {{ form.start_datetime }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">End</label>
+              {{ form.end_datetime }}
+            </div>
+          </div>
+          {% if form.errors.start_datetime or form.errors.end_datetime %}
+            <div class="alert alert-danger small">{{ form.errors.start_datetime }} {{ form.errors.end_datetime }}</div>
+          {% endif %}
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-2"></i>Schedule</button>
+            <a href="{% url 'venues:venue_calendar' venue.slug %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

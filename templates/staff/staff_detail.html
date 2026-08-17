@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile.user.get_full_name|default:profile.user.username }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <h2 class="mb-1">{{ profile.user.get_full_name|default:profile.user.username }}</h2>
+            <p class="text-muted-custom mb-0">{{ profile.employee_id }} {% if profile.designation %}· {{ profile.designation }}{% endif %}</p>
+          </div>
+          {% if profile.department %}<span class="badge-soft">{{ profile.department.name }}</span>{% endif %}
+        </div>
+        {% if profile.phone_number %}<div class="event-meta"><i class="bi bi-telephone"></i> {{ profile.phone_number }}</div>{% endif %}
+        <div class="event-meta"><i class="bi bi-calendar-check"></i> Hired {{ profile.hire_date }}</div>
+        {% if profile.skill_list %}
+        <div class="d-flex flex-wrap gap-2 my-3">
+          {% for skill in profile.skill_list %}<span class="badge-soft success">{{ skill }}</span>{% endfor %}
+        </div>
+        {% endif %}
+        {% if is_admin %}
+        <a href="{% url 'staff:staff_edit' profile.pk %}" class="btn btn-outline-light btn-sm mt-2"><i class="bi bi-pencil me-1"></i>Edit Profile</a>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="dashboard-panel-title"><span><i class="bi bi-calendar-week text-info me-2"></i>Upcoming Shifts</span></div>
+        {% if upcoming_shifts %}
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+          {% for shift in upcoming_shifts %}
+          <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+            <div>
+              <p class="mb-0">{{ shift.title }}{% if shift.event %} — {{ shift.event.title }}{% endif %} {% if shift.auto_assigned %}<span class="badge-soft small">auto</span>{% endif %}</p>
+              <p class="text-muted-custom mb-0 small">{{ shift.start_datetime|date:"M d, Y g:i A" }} – {{ shift.end_datetime|date:"g:i A" }}</p>
+            </div>
+            {% if can_manage_shifts or is_self %}
+            <div class="d-flex gap-2">
+              <form method="post" action="{% url 'staff:shift_complete' shift.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-light">Complete</button></form>
+              <form method="post" action="{% url 'staff:shift_cancel' shift.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger">Cancel</button></form>
+            </div>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No upcoming shifts.</p>
+        {% endif %}
+      </div>
+
+      <div class="glass-card p-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="dashboard-panel-title mb-0"><span><i class="bi bi-clock-history text-info me-2"></i>Attendance</span></div>
+          {% if is_self or is_admin %}
+          <a href="{% url 'staff:attendance_mark' profile.pk %}" class="btn btn-sm btn-outline-light">Mark Today</a>
+          {% endif %}
+        </div>
+        {% if attendance_records %}
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+          {% for record in attendance_records %}
+          <li class="d-flex justify-content-between border-bottom pb-2 divider-soft">
+            <span>{{ record.date }}</span>
+            <span class="badge-soft {% if record.status == 'present' %}success{% elif record.status == 'absent' %}danger{% else %}warning{% endif %}">{{ record.get_status_display }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No attendance recorded yet.</p>
+        {% endif %}
+      </div>
+
+      {% if can_view_salary %}
+      <div class="glass-card p-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="dashboard-panel-title mb-0"><span><i class="bi bi-cash-coin text-info me-2"></i>Salary Records</span></div>
+          {% if is_admin %}
+          <a href="{% url 'staff:salary_record_create' profile.pk %}" class="btn btn-sm btn-outline-light">Add Record</a>
+          {% endif %}
+        </div>
+        {% if salary_records %}
+        <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+          {% for record in salary_records %}
+          <li class="d-flex justify-content-between border-bottom pb-2 divider-soft">
+            <span>{{ record.period_start }} – {{ record.period_end }}</span>
+            <span>₹{{ record.net_amount }} <span class="badge-soft {% if record.status == 'paid' %}success{% else %}warning{% endif %} ms-2">{{ record.get_status_display }}</span></span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted-custom mb-0">No salary records yet.</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Vendors{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Vendors</h1>
+      <p class="text-muted-custom mb-0">Catering, decoration, photography, and more — browse approved vendors.</p>
+    </div>
+    <div class="d-flex gap-2">
+      {% if can_manage_vendors %}
+      <a href="{% url 'vendors:vendor_payment_list' %}" class="btn btn-outline-light"><i class="bi bi-cash-stack me-2"></i>Payments</a>
+      {% endif %}
+      {% if user.is_authenticated and user.role == 'vendor' %}
+      <a href="{% url 'vendors:vendor_profile_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Register as Vendor</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card filter-bar mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label">Search</label>
+        <div class="input-icon-group">
+          <i class="bi bi-search form-icon"></i>
+          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search vendors...">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Service Type</label>
+        <select name="service_type" class="form-select">
+          <option value="">All Types</option>
+          {% for value, label in service_types %}
+          <option value="{{ value }}" {% if value == selected_service_type %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100" title="Apply"><i class="bi bi-funnel"></i></button>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-4">
+    {% for vendor in page_obj %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card event-card h-100 d-flex flex-column fade-in-up">
+        {% if vendor.logo %}
+          <img src="{{ vendor.logo.url }}" class="event-card-image" alt="{{ vendor.company_name }}">
+        {% else %}
+          <div class="event-card-placeholder"><i class="bi bi-truck"></i></div>
+        {% endif %}
+        <div class="event-card-body d-flex flex-column flex-grow-1">
+          <span class="badge-soft mb-2 align-self-start">{{ vendor.get_service_type_display }}</span>
+          <h5 class="mb-2"><a href="{{ vendor.get_absolute_url }}" class="text-reset">{{ vendor.company_name }}</a></h5>
+          {% if vendor.performance_score %}
+          <div class="event-meta"><i class="bi bi-star-fill text-warning"></i> {{ vendor.performance_score }}/5 ({{ vendor.rating_count }} review{{ vendor.rating_count|pluralize }})</div>
+          {% else %}
+          <div class="event-meta text-muted-custom"><i class="bi bi-star"></i> No ratings yet</div>
+          {% endif %}
+          {% if vendor.status != 'approved' %}
+          <span class="badge-soft warning mt-2 align-self-start">{{ vendor.get_status_display }}</span>
+          {% endif %}
+          <div class="mt-auto pt-3">
+            <a href="{{ vendor.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">View Profile</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-truck d-block mb-3"></i>
+        <h5>No vendors found</h5>
+        <p class="text-muted-custom">Try adjusting your search or filters.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-5">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% if messages %}
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+  {% for message in messages %}
+  <div class="toast align-items-center glass-card border-0 toast-{{ message.tags }} show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" style="border-radius: var(--radius-sm);">
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center">
+        {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill me-2 text-success-custom"></i>
+        {% elif message.tags == 'danger' %}<i class="bi bi-exclamation-triangle-fill me-2" style="color: var(--danger);"></i>
+        {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-circle-fill me-2" style="color: var(--accent);"></i>
+        {% else %}<i class="bi bi-info-circle-fill me-2" style="color: var(--secondary);"></i>{% endif %}
+        <span>{{ message }}</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.toast').forEach(function (toastEl) {
+      new bootstrap.Toast(toastEl).show();
+    });
+  });
+</script>
+{% endif %}

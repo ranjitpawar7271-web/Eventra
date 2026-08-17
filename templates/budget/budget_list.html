@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+<div class="dashboard-layout">
+  {% include 'includes/sidebar.html' %}
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <div>
+        <h2 class="mb-1"><i class="bi bi-cash-coin text-info me-2"></i>Budgets & Expenses</h2>
+        <p class="text-muted-custom mb-0">Estimated vs. actual for every event you can manage.</p>
+      </div>
+    </div>
+
+    <div class="glass-card p-4 mb-4">
+      {% if budgets %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Estimated</th>
+              <th>Spent</th>
+              <th>Revenue</th>
+              <th>Profit / Loss</th>
+              <th>Variance</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for budget in budgets %}
+            <tr>
+              <td><a href="{{ budget.event.get_absolute_url }}">{{ budget.event.title }}</a></td>
+              <td>₹{{ budget.estimated_budget }}</td>
+              <td>₹{{ budget.total_expenses }}</td>
+              <td>₹{{ budget.total_revenue }}</td>
+              <td>
+                <span class="badge-soft {% if budget.is_profitable %}success{% else %}danger{% endif %}">₹{{ budget.profit_or_loss }}</span>
+              </td>
+              <td>
+                <span class="badge-soft {% if budget.is_over_budget %}danger{% else %}success{% endif %}">
+                  {% if budget.is_over_budget %}-₹{{ budget.variance_abs }}{% else %}₹{{ budget.variance }}{% endif %}
+                </span>
+              </td>
+              <td><a href="{% url 'budget:budget_detail' budget.event.slug %}" class="btn btn-sm btn-outline-light">Open</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted-custom mb-0">No budgets set up yet.</p>
+      {% endif %}
+    </div>
+
+    {% if events_without_budget %}
+    <div class="glass-card p-4">
+      <div class="dashboard-panel-title"><span><i class="bi bi-exclamation-circle text-accent me-2"></i>Events Without a Budget Yet</span></div>
+      <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+        {% for event in events_without_budget %}
+        <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
+          <a href="{{ event.get_absolute_url }}" class="text-reset">{{ event.title }}</a>
+          <a href="{% url 'budget:budget_setup' event.slug %}" class="btn btn-sm btn-primary">Set Up Budget</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

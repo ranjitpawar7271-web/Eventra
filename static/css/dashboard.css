@@ -1,0 +1,216 @@
+/* =========================================================
+   EVENTRA - Dashboard Module
+   ========================================================= */
+
+.dashboard-layout {
+  display: flex;
+  min-height: calc(100vh - 76px);
+}
+
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border);
+  padding: 1.75rem 1.25rem;
+}
+
+.sidebar-brand {
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
+}
+
+.sidebar .nav-link {
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.sidebar .nav-link i { font-size: 1.05rem; width: 20px; text-align: center; }
+.sidebar .nav-link:hover {
+  background: var(--card-hover);
+  color: var(--text);
+}
+.sidebar .nav-link.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: none;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 2.25rem;
+  min-width: 0;
+}
+
+.dashboard-stat-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 172px;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.65rem;
+}
+
+/* Icon container: centered on top, fixed square footprint */
+.dashboard-stat-card .icon-tile {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  font-size: 1.5rem;
+  margin: 0 auto;
+}
+
+/* Wrapper holding the number + label: stacked, same gap as icon->number
+   so spacing stays visually even (icon | number | label) */
+.dashboard-stat-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dashboard-stat-card .stat-value {
+  font-size: clamp(1.75rem, 1.5rem + 0.6vw, 2.05rem); /* ~28-33px */
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-stat-card .stat-label {
+  color: var(--text-muted);
+  font-size: 0.9rem; /* ~14.4px */
+  font-weight: 500;
+  line-height: 1.35;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+
+  /* keep long labels inside the card: wrap, clamp to 2 lines, center them */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+
+/* Equal card heights within a row + full-width tap target for the
+   linked "Pending Approvals" card, with no HTML changes required */
+.row.g-3 > [class^="col-"]:has(> .dashboard-stat-card),
+.row.g-3 > [class^="col-"]:has(> a > .dashboard-stat-card) {
+  display: flex;
+}
+.row.g-3 > [class^="col-"] > a:has(> .dashboard-stat-card) {
+  display: flex;
+  width: 100%;
+  text-decoration: none;
+}
+
+@media (max-width: 575.98px) {
+  .dashboard-stat-card {
+    min-height: 152px;
+    padding: 18px 14px;
+  }
+  .dashboard-stat-card .icon-tile {
+    width: 52px;
+    height: 52px;
+    font-size: 1.3rem;
+  }
+}
+
+.quick-action {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+.quick-action:hover {
+  border-color: var(--secondary);
+  color: var(--secondary);
+  transform: translateX(4px);
+}
+
+.dashboard-panel-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Offcanvas sidebar for mobile */
+.sidebar-mobile-toggle {
+  display: none;
+}
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .sidebar-mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 90px;
+    left: 1rem;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--primary);
+    color: #fff;
+    font-size: 1.25rem;
+    z-index: 1040;
+    box-shadow: var(--shadow-soft);
+  }
+  .sidebar-mobile-toggle.active { transform: rotate(90deg); }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1050;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+  }
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1045;
+  }
+  .sidebar-backdrop.active {
+    display: block;
+  }
+}

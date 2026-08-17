@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}FAQ{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container text-center">
+    <h1>Frequently Asked Questions</h1>
+    <p class="text-muted-custom fs-5">Everything you need to know about using Eventra.</p>
+  </div>
+</div>
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="accordion" id="faqAccordion">
+
+        <div class="accordion-item glass-card mb-3 border-0">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+              How do I create an event?
+            </button>
+          </h2>
+          <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-muted-custom">Sign in, click "Create Event" from your dashboard or navbar, fill in the details, and publish. Your event will appear in the events listing immediately.</div>
+          </div>
+        </div>
+
+        <div class="accordion-item glass-card mb-3 border-0">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+              Can I cancel my registration?
+            </button>
+          </h2>
+          <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-muted-custom">Yes. Go to "My Registrations" in your dashboard and click cancel next to the event you no longer wish to attend.</div>
+          </div>
+        </div>
+
+        <div class="accordion-item glass-card mb-3 border-0">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+              Is Eventra free to use?
+            </button>
+          </h2>
+          <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-muted-custom">Browsing and registering for free events is always free. Organizers may set a price for paid events they create.</div>
+          </div>
+        </div>
+
+        <div class="accordion-item glass-card mb-3 border-0">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+              How do I reset my password?
+            </button>
+          </h2>
+          <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-muted-custom">Click "Forgot password?" on the login page and follow the email instructions sent to your registered address.</div>
+          </div>
+        </div>
+
+        <div class="accordion-item glass-card mb-3 border-0">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+              Who can add event categories?
+            </button>
+          </h2>
+          <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-muted-custom">Category management is restricted to staff/admin accounts to keep the taxonomy clean and consistent.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

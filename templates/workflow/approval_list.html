@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1"><i class="bi bi-clipboard-check text-info me-2"></i>Approvals</h2>
+      <p class="text-muted mb-0">Requests waiting on a Super Admin / Staff decision.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'workflow:settings' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-gear me-1"></i>Workflow settings</a>
+      <a href="{% url 'workflow:announce' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-megaphone me-1"></i>Broadcast</a>
+    </div>
+  </div>
+
+  <div class="glass-card p-4 mb-4">
+    <h5 class="mb-3">Pending <span class="badge bg-warning text-dark">{{ pending_steps|length }}</span></h5>
+    {% if pending_steps %}
+      <div class="table-responsive">
+        <table class="table table-borderless align-middle mb-0">
+          <thead><tr class="text-muted small text-uppercase">
+            <th>Item</th><th>Stage</th><th>Requested by</th><th>Requested</th><th class="text-end">Decision</th>
+          </tr></thead>
+          <tbody>
+          {% for step in pending_steps %}
+            <tr style="border-top: 1px solid var(--border);">
+              <td>{{ step.content_object }}</td>
+              <td><span class="badge bg-secondary">{{ step.get_stage_display }}</span></td>
+              <td>{{ step.requested_by|default:"—" }}</td>
+              <td class="text-muted small">{{ step.requested_at|date:"M d, Y H:i" }}</td>
+              <td class="text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                  <form method="post" action="{% url 'workflow:approval_decide' step.pk 'approve' %}" class="d-flex gap-1">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i> Approve</button>
+                  </form>
+                  <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="collapse" data-bs-target="#reject-{{ step.pk }}">
+                    <i class="bi bi-x-lg"></i> Reject
+                  </button>
+                </div>
+                <div class="collapse mt-2" id="reject-{{ step.pk }}">
+                  <form method="post" action="{% url 'workflow:approval_decide' step.pk 'reject' %}" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <input type="text" name="comment" class="form-control form-control-sm" placeholder="Reason (optional)">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Confirm reject</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">Nothing waiting on you right now.</p>
+    {% endif %}
+  </div>
+
+  <div class="glass-card p-4">
+    <h5 class="mb-3">Recently decided</h5>
+    {% if decided_steps %}
+      <ul class="list-unstyled mb-0">
+        {% for step in decided_steps %}
+          <li class="d-flex justify-content-between py-2" style="border-bottom: 1px solid var(--border);">
+            <span>
+              {% if step.status == 'approved' %}<i class="bi bi-check-circle text-success me-2"></i>{% else %}<i class="bi bi-x-circle text-danger me-2"></i>{% endif %}
+              {{ step.content_object }} <span class="text-muted">— {{ step.get_status_display }}</span>
+            </span>
+            <span class="text-muted small">{{ step.decided_by|default:"—" }} · {{ step.decided_at|date:"M d, H:i" }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted mb-0">No decisions yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

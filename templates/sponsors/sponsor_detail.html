@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}{{ sponsor.company_name }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'sponsors:sponsor_list' %}">Sponsors</a></li>
+      <li class="breadcrumb-item active text-muted-custom">{{ sponsor.company_name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      {% if sponsor.logo %}
+        <img src="{{ sponsor.logo.url }}" class="event-detail-hero mb-4" alt="{{ sponsor.company_name }}">
+      {% else %}
+        <div class="event-card-placeholder event-detail-hero mb-4" style="border-radius: var(--radius);"><i class="bi bi-award"></i></div>
+      {% endif %}
+
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        {% if not sponsor.is_active %}<span class="badge-soft warning">Inactive</span>{% endif %}
+      </div>
+      <h1 class="mb-3">{{ sponsor.company_name }}</h1>
+      {% if sponsor.website %}<p><a href="{{ sponsor.website }}" target="_blank" rel="noopener">{{ sponsor.website }}</a></p>{% endif %}
+
+      {% if sponsor.description %}
+      <div class="glass-card p-4 mb-4">
+        <h5 class="mb-3">About</h5>
+        <p class="text-muted-custom mb-0" style="white-space: pre-line;">{{ sponsor.description }}</p>
+      </div>
+      {% endif %}
+
+      <div class="glass-card p-4">
+        <h5 class="mb-3">Sponsorship Deals</h5>
+        {% if sponsorships %}
+        <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Event</th><th>Package</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for deal in sponsorships %}
+            <tr>
+              <td><a href="{{ deal.event.get_absolute_url }}" class="text-reset">{{ deal.event.title }}</a></td>
+              <td>{{ deal.get_package_display }}</td>
+              <td>₹{{ deal.amount }}</td>
+              <td><span class="badge-soft {% if deal.status == 'paid' %}success{% elif deal.status == 'confirmed' %}accent{% elif deal.status == 'cancelled' %}danger{% else %}warning{% endif %}">{{ deal.get_status_display }}</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+    </div>
+        {% else %}
+        <p class="text-muted-custom mb-0">No sponsorship deals yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="glass-card p-4 mb-4">
+        <div class="dashboard-panel-title"><span>Contact</span></div>
+        {% if sponsor.contact_person %}<div class="event-meta"><i class="bi bi-person"></i> {{ sponsor.contact_person }}</div>{% endif %}
+        {% if sponsor.email %}<div class="event-meta"><i class="bi bi-envelope"></i> {{ sponsor.email }}</div>{% endif %}
+        {% if sponsor.phone_number %}<div class="event-meta"><i class="bi bi-telephone"></i> {{ sponsor.phone_number }}</div>{% endif %}
+        <div class="event-meta"><i class="bi bi-cash-coin"></i> ₹{{ sponsor.total_confirmed_amount }} confirmed to date</div>
+      </div>
+      {% if can_manage_this_sponsor %}
+      <div class="glass-card p-4">
+        <div class="d-grid gap-2">
+          <a href="{% url 'sponsors:sponsor_edit' sponsor.slug %}" class="btn btn-outline-light"><i class="bi bi-pencil me-2"></i>Edit Sponsor</a>
+          <a href="{% url 'sponsors:sponsor_delete' sponsor.slug %}" class="btn btn-outline-danger"><i class="bi bi-trash me-2"></i>Delete Sponsor</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

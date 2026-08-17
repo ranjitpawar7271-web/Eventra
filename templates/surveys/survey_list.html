@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Polls & Feedback — {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <nav aria-label="breadcrumb" class="mb-1">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+          <li class="breadcrumb-item active text-muted-custom">Polls & Feedback</li>
+        </ol>
+      </nav>
+      <h1 class="mb-0">Polls & Feedback</h1>
+    </div>
+    {% if can_manage %}
+    <a href="{% url 'surveys:survey_create' event.slug %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>New Survey</a>
+    {% endif %}
+  </div>
+
+  <div class="row g-4">
+    {% for survey in surveys %}
+    <div class="col-md-6">
+      <div class="glass-card p-4 h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="badge-soft {% if survey.survey_type == 'poll' %}accent{% else %}success{% endif %}">{{ survey.get_survey_type_display }}</span>
+          {% if not survey.is_open %}<span class="badge-soft warning">Closed</span>{% endif %}
+        </div>
+        <h5>{{ survey.title }}</h5>
+        {% if survey.description %}<p class="text-muted-custom small">{{ survey.description }}</p>{% endif %}
+        <div class="mt-auto pt-3 d-flex gap-2 flex-wrap">
+          {% if can_manage %}
+          <a href="{% url 'surveys:survey_manage' survey.pk %}" class="btn btn-sm btn-outline-light">Manage</a>
+          <a href="{% url 'surveys:survey_results' survey.pk %}" class="btn btn-sm btn-outline-light">Results ({{ survey.response_count }})</a>
+          {% else %}
+            {% if survey.pk in responded_ids %}
+            <span class="badge-soft success align-self-center">Responded — thank you!</span>
+            {% else %}
+            <a href="{% url 'surveys:survey_respond' survey.pk %}" class="btn btn-sm btn-primary">Respond</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-clipboard2-check d-block mb-3"></i>
+        <h5>No surveys yet</h5>
+        <p class="text-muted-custom mb-0">{% if can_manage %}Create a poll or feedback form to get started.{% else %}Nothing to respond to right now.{% endif %}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Venues{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Venues</h1>
+      <p class="text-muted-custom mb-0">Browse and book managed venues for your events.</p>
+    </div>
+    {% if can_manage_venues %}
+    <a href="{% url 'venues:venue_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Venue</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card filter-bar mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label">Search</label>
+        <div class="input-icon-group">
+          <i class="bi bi-search form-icon"></i>
+          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by name, address...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">City</label>
+        <select name="city" class="form-select">
+          <option value="">All Cities</option>
+          {% for c in cities %}
+          <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Min Capacity</label>
+        <input type="number" name="min_capacity" value="{{ min_capacity }}" class="form-control" min="0" placeholder="e.g. 100">
+      </div>
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100" title="Apply"><i class="bi bi-funnel"></i></button>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-4">
+    {% for venue in page_obj %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card event-card h-100 d-flex flex-column fade-in-up">
+        {% if venue.image %}
+          <img src="{{ venue.image.url }}" class="event-card-image" alt="{{ venue.name }}">
+        {% else %}
+          <div class="event-card-placeholder"><i class="bi bi-building"></i></div>
+        {% endif %}
+        <div class="event-card-body d-flex flex-column flex-grow-1">
+          <h5 class="mb-2"><a href="{{ venue.get_absolute_url }}" class="text-reset">{{ venue.name }}</a></h5>
+          <div class="event-meta"><i class="bi bi-geo-alt"></i> {{ venue.address }}, {{ venue.city }}</div>
+          <div class="event-meta"><i class="bi bi-people"></i> Capacity: {{ venue.capacity }}</div>
+          {% if venue.facility_list %}
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            {% for facility in venue.facility_list|slice:":4" %}
+            <span class="badge-soft">{{ facility }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <div class="mt-auto pt-3">
+            <a href="{{ venue.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">View & Book</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-building d-block mb-3"></i>
+        <h5>No venues found</h5>
+        <p class="text-muted-custom">Try adjusting your search or filters.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-5">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}">Previous</a></li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}">{{ num }}</a></li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_city %}&city={{ selected_city }}{% endif %}">Next</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

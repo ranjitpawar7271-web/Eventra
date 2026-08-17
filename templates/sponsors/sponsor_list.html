@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Sponsors{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Sponsors</h1>
+      <p class="text-muted-custom mb-0">The sponsor catalog — attach any of these to an event as a sponsorship deal.</p>
+    </div>
+    {% if can_manage_catalog %}
+    <a href="{% url 'sponsors:sponsor_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Sponsor</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card filter-bar mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-10">
+        <label class="form-label">Search</label>
+        <div class="input-icon-group">
+          <i class="bi bi-search form-icon"></i>
+          <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search sponsors...">
+        </div>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100" title="Search"><i class="bi bi-funnel"></i></button>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-4">
+    {% for sponsor in page_obj %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card event-card h-100 d-flex flex-column fade-in-up">
+        {% if sponsor.logo %}
+          <img src="{{ sponsor.logo.url }}" class="event-card-image" alt="{{ sponsor.company_name }}">
+        {% else %}
+          <div class="event-card-placeholder"><i class="bi bi-award"></i></div>
+        {% endif %}
+        <div class="event-card-body d-flex flex-column flex-grow-1">
+          <h5 class="mb-2"><a href="{{ sponsor.get_absolute_url }}" class="text-reset">{{ sponsor.company_name }}</a></h5>
+          <div class="event-meta"><i class="bi bi-cash-coin"></i> ₹{{ sponsor.total_confirmed_amount }} confirmed to date</div>
+          {% if not sponsor.is_active %}
+          <span class="badge-soft warning mt-2 align-self-start">Inactive</span>
+          {% endif %}
+          <div class="mt-auto pt-3">
+            <a href="{{ sponsor.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">View Sponsor</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-award d-block mb-3"></i>
+        <h5>No sponsors yet</h5>
+        <p class="text-muted-custom">{% if can_manage_catalog %}Add your first sponsor to get started.{% else %}Check back once sponsors are added.{% endif %}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+  <nav class="mt-5">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

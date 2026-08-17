@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Delete Currency{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="glass-card p-4 p-md-5 text-center">
+        <h3 class="mb-2">Delete {{ currency.code }}?</h3>
+        <form method="post" class="d-flex gap-2 justify-content-center">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger px-4">Yes, Delete</button>
+          <a href="{% url 'currency:currency_list' %}" class="btn btn-outline-light px-4">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+/* =========================================================
+   EVENTRA - Events Module
+   ========================================================= */
+
+.event-card { overflow: hidden; }
+
+.event-card-image {
+  height: 190px;
+  width: 100%;
+  object-fit: cover;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.event-card-placeholder {
+  height: 190px;
+  width: 100%;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.35), rgba(56, 189, 248, 0.25));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: rgba(248, 250, 252, 0.85);
+}
+
+.event-card-body { padding: 1.5rem; }
+
+.event-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+.event-meta i { color: var(--secondary); }
+
+.event-detail-hero {
+  border-radius: var(--radius);
+  overflow: hidden;
+  height: 340px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.filter-bar {
+  padding: 1.25rem;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+  color: var(--text);
+}
+.category-chip:hover, .category-chip.active {
+  border-color: var(--secondary);
+  color: var(--secondary);
+  transform: translateY(-3px);
+}
+.category-chip i { font-size: 1.2rem; color: var(--secondary); }
+
+.seats-progress {
+  height: 6px;
+  border-radius: 10px;
+  background: var(--border);
+  overflow: hidden;
+}
+.seats-progress-bar {
+  height: 100%;
+  background: var(--primary);
+}

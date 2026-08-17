@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Damage Reports{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1>Damage Reports</h1>
+    <p class="text-muted-custom mb-0">Open reports across all resources — affected units are held out of the allocatable pool until resolved.</p>
+  </div>
+</div>
+<div class="container section-sm">
+  <div class="glass-card p-4">
+    {% if reports %}
+    <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+      {% for report in reports %}
+      <li class="d-flex justify-content-between align-items-center border-bottom pb-3 divider-soft">
+        <div>
+          <p class="mb-1"><a href="{{ report.resource.get_absolute_url }}" class="text-reset">{{ report.resource.name }}</a> — {{ report.quantity_damaged }} {{ report.resource.unit }}</p>
+          <p class="text-muted-custom mb-0 small">{{ report.description|truncatechars:100 }}</p>
+          <p class="text-muted-custom mb-0 small">Reported by {{ report.reported_by }} on {{ report.created_at|date:"M d, Y" }}</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge-soft {% if report.severity == 'critical' %}danger{% elif report.severity == 'major' %}warning{% endif %}">{{ report.get_severity_display }}</span>
+          <span class="badge-soft">{{ report.get_status_display }}</span>
+          <form method="post" action="{% url 'resources:damage_report_resolve' report.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-light">Mark Resolved</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-check-circle d-block mb-3"></i>
+      <h5>No open damage reports</h5>
+      <p class="text-muted-custom">Everything is in working order.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

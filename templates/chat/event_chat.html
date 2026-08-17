@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Chat — {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-2">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active text-muted-custom">Chat & Announcements</li>
+    </ol>
+  </nav>
+  <h1 class="mb-4">Chat & Announcements</h1>
+
+  <div class="glass-card p-4 mb-3">
+    <div id="chat-feed" style="max-height: 480px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+      {% for message in chat_messages %}
+      <div class="chat-bubble {% if message.message_type == 'announcement' %}chat-bubble-announcement{% endif %}" data-message-id="{{ message.id }}">
+        <div class="d-flex justify-content-between align-items-baseline">
+          <strong>
+            {% if message.message_type == 'announcement' %}<i class="bi bi-megaphone-fill me-1"></i>{% endif %}
+            {{ message.sender.get_full_name|default:message.sender.username }}
+          </strong>
+          <span class="text-muted-custom small">{{ message.created_at|date:"M d, g:i A" }}</span>
+        </div>
+        <p class="mb-0">{{ message.body }}</p>
+        {% if can_manage or message.sender_id == user.id %}
+        <form method="post" action="{% url 'chat:message_delete' message.pk %}" class="mt-1">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent p-0"><i class="bi bi-trash small"></i></button>
+        </form>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p class="text-muted-custom mb-0" id="chat-empty-state">No messages yet — say hello!</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="glass-card p-3">
+    <form id="chat-form" class="d-flex gap-2 align-items-start">
+      {% csrf_token %}
+      <textarea id="chat-body" class="form-control" rows="1" maxlength="1000" placeholder="Write a message..." required></textarea>
+      {% if can_manage %}
+      <select id="chat-type" class="form-select" style="width: auto;">
+        <option value="chat">Chat</option>
+        <option value="announcement">Announcement</option>
+      </select>
+      {% endif %}
+      <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i></button>
+    </form>
+  </div>
+</div>
+
+<style>
+  .chat-bubble { background: var(--card-hover); border-radius: var(--radius); padding: 0.75rem 1rem; }
+  .chat-bubble-announcement { background: rgba(99,102,241,0.12); border-left: 3px solid var(--accent); }
+</style>
+
+<script>
+(function() {
+  const feed = document.getElementById('chat-feed');
+  const emptyState = document.getElementById('chat-empty-state');
+  const form = document.getElementById('chat-form');
+  const bodyInput = document.getElementById('chat-body');
+  const typeSelect = document.getElementById('chat-type');
+  const csrfToken = document.querySelector('#chat-form [name=csrfmiddlewaretoken]').value;
+  const postUrl = "{% url 'chat:message_post' event.slug %}";
+  const pollUrl = "{% url 'chat:message_poll' event.slug %}";
+  let lastId = {{ last_id }};
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function appendMessage(msg) {
+    if (emptyState) emptyState.remove();
+    const isAnnouncement = msg.message_type === 'announcement';
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble' + (isAnnouncement ? ' chat-bubble-announcement' : '');
+    bubble.dataset.messageId = msg.id;
+    bubble.innerHTML =
+      '<div class="d-flex justify-content-between align-items-baseline">' +
+        '<strong>' + (isAnnouncement ? '<i class="bi bi-megaphone-fill me-1"></i>' : '') + escapeHtml(msg.sender) + '</strong>' +
+        '<span class="text-muted-custom small">' + escapeHtml(msg.created_at) + '</span>' +
+      '</div>' +
+      '<p class="mb-0"></p>';
+    bubble.querySelector('p').textContent = msg.body;
+    feed.appendChild(bubble);
+    feed.scrollTop = feed.scrollHeight;
+    lastId = Math.max(lastId, msg.id);
+  }
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const body = bodyInput.value.trim();
+    if (!body) return;
+    const formData = new FormData();
+    formData.append('body', body);
+    if (typeSelect) formData.append('message_type', typeSelect.value);
+
+    fetch(postUrl, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+      body: formData,
+    })
+      .then(function(res) { return res.json(); })
+      .then(function(msg) {
+        if (msg.id) {
+          appendMessage(msg);
+          bodyInput.value = '';
+        }
+      });
+  });
+
+  // Polling: this project doesn't have Django Channels wired in, so
+  // "live" here means checking for new messages every few seconds, not
+  // a websocket push. See the Message model docstring for the tradeoff.
+  setInterval(function() {
+    fetch(pollUrl + '?after=' + lastId, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        (data.messages || []).forEach(appendMessage);
+      })
+      .catch(function() { /* silent — next interval will retry */ });
+  }, 4000);
+})();
+</script>
+{% endblock %}

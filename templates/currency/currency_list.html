@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Currencies{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Currencies</h1>
+      <p class="text-muted-custom mb-0">Base currency is INR. Rates are manually maintained, not live FX.</p>
+    </div>
+    <a href="{% url 'currency:currency_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Currency</a>
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card p-4">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Code</th><th>Name</th><th>Symbol</th><th>Rate to Base</th><th>Base?</th><th></th></tr></thead>
+      <tbody>
+      {% for c in currencies %}
+      <tr>
+        <td>{{ c.code }}</td>
+        <td>{{ c.name }}</td>
+        <td>{{ c.symbol }}</td>
+        <td>{{ c.rate_to_base }}</td>
+        <td>{% if c.is_base %}<span class="badge-soft success">Base</span>{% endif %}</td>
+        <td class="text-end">
+          <a href="{% url 'currency:currency_edit' c.pk %}" class="text-muted-custom me-2"><i class="bi bi-pencil"></i></a>
+          <a href="{% url 'currency:currency_delete' c.pk %}" class="text-danger"><i class="bi bi-trash"></i></a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted-custom">No currencies configured yet — add one to enable the display-currency switcher.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

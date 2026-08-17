@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Platform Settings{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4"><i class="bi bi-gear me-2 text-info"></i>Platform Settings</h3>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Site Name</label>
+              {{ form.site_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Support Email</label>
+              {{ form.support_email }}
+            </div>
+          </div>
+          <div class="form-check mb-3">
+            {{ form.allow_new_signups }}
+            <label class="form-check-label" for="{{ form.allow_new_signups.id_for_label }}">Allow new signups</label>
+          </div>
+          <hr class="divider-soft my-4">
+          <div class="form-check mb-3">
+            {{ form.maintenance_mode }}
+            <label class="form-check-label text-danger" for="{{ form.maintenance_mode.id_for_label }}">Maintenance mode (blocks everyone except Super Admins)</label>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Maintenance Message</label>
+            {{ form.maintenance_message }}
+          </div>
+          <button type="submit" class="btn btn-primary px-4">Save</button>
+        </form>
+        {% if settings_obj.updated_by %}
+        <p class="text-muted-custom small mt-3 mb-0">Last updated by {{ settings_obj.updated_by.username }} on {{ settings_obj.updated_at|date:"M d, Y g:i A" }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

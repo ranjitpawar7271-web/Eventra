@@ -1,0 +1,76 @@
+/* =========================================================
+   EVENTRA - Form Styling
+   ========================================================= */
+
+.form-floating > .form-control,
+.form-floating > .form-select {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+
+.form-floating > .form-control:focus,
+.form-floating > .form-select:focus {
+  background-color: var(--input-bg-focus);
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.2);
+  color: var(--text);
+}
+
+.form-floating > label { color: var(--text-muted); }
+.form-floating > .form-control::placeholder { color: transparent; }
+
+.form-control, .form-select {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 0.65rem 1rem;
+}
+.form-control:focus, .form-select:focus {
+  background-color: var(--input-bg-focus);
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.2);
+  color: var(--text);
+}
+.form-control::placeholder { color: var(--text-muted); opacity: .7; }
+
+textarea.form-control { min-height: 110px; }
+
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+  color: var(--text);
+}
+
+.input-icon-group {
+  position: relative;
+}
+.input-icon-group .form-icon {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+.input-icon-group .form-control { padding-left: 2.6rem; }
+
+.invalid-feedback { color: var(--danger); }
+.form-control.is-invalid, .was-validated .form-control:invalid {
+  border-color: var(--danger);
+}
+
+.form-check-input {
+  background-color: var(--input-bg);
+  border-color: var(--border);
+}
+.form-check-input:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.form-text { color: var(--text-muted); }
+
+/* File input */
+.form-control[type="file"] { padding: 0.5rem 1rem; }

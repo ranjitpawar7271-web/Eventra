@@ -1,0 +1,27 @@
+/* =========================================================
+   EVENTRA - Responsive Adjustments
+   ========================================================= */
+
+@media (max-width: 1199.98px) {
+  .dashboard-main { padding: 1.75rem; }
+}
+
+@media (max-width: 991.98px) {
+  .hero { padding: 3.5rem 0 2.5rem; text-align: center; }
+  .hero::before { display: none; }
+  .page-hero { padding: 3rem 0 2rem; text-align: center; }
+  .auth-card { padding: 2rem; }
+}
+
+@media (max-width: 767.98px) {
+  .section { padding: 3rem 0; }
+  .stat-card h3 { font-size: 1.6rem; }
+  .event-card-body { padding: 1.1rem; }
+  .footer-brand { text-align: center; }
+}
+
+@media (max-width: 575.98px) {
+  .auth-card { padding: 1.5rem; }
+  .page-hero h1 { font-size: 1.7rem; }
+  .btn { padding: 0.55rem 1.1rem; }
+}

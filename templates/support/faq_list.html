@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Help Center{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Help Center</h1>
+      <p class="text-muted-custom mb-0">Frequently asked questions.</p>
+    </div>
+    {% if can_manage %}
+    <a href="{% url 'support:faq_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add FAQ</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="glass-card p-4">
+    {% for item in items %}
+    <div class="border-bottom pb-3 mb-3 divider-soft">
+      <div class="d-flex justify-content-between align-items-start">
+        <h5 class="mb-2">{{ item.question }}</h5>
+        {% if can_manage %}
+        <div class="d-flex gap-2 flex-shrink-0 ms-3">
+          {% if not item.is_published %}<span class="badge-soft warning">Draft</span>{% endif %}
+          <a href="{% url 'support:faq_edit' item.pk %}" class="text-muted-custom"><i class="bi bi-pencil"></i></a>
+          <a href="{% url 'support:faq_delete' item.pk %}" class="text-danger"><i class="bi bi-trash"></i></a>
+        </div>
+        {% endif %}
+      </div>
+      <p class="text-muted-custom mb-0" style="white-space: pre-line;">{{ item.answer }}</p>
+    </div>
+    {% empty %}
+    <p class="text-muted-custom mb-0">No FAQ entries yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

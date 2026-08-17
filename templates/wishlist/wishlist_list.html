@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}My Wishlist{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container text-center">
+    <h1>My Wishlist</h1>
+    <p class="text-muted-custom fs-5">Events you've bookmarked to keep an eye on.</p>
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="row g-4">
+    {% for favorite in favorites %}
+    {% with event=favorite.event %}
+    <div class="col-md-6 col-lg-4">
+      <div class="glass-card event-card h-100 d-flex flex-column fade-in-up" style="position: relative;">
+        <form method="post" action="{% url 'wishlist:toggle_favorite' event.slug %}" style="position: absolute; top: 10px; right: 10px; z-index: 2;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'wishlist:wishlist_list' %}">
+          <button type="submit" class="btn btn-sm btn-outline-light" style="border-radius: 50%; width: 36px; height: 36px; padding: 0;" title="Remove from wishlist">
+            <i class="bi bi-heart-fill text-danger"></i>
+          </button>
+        </form>
+        {% if event.image %}
+          <img src="{{ event.image.url }}" class="event-card-image" alt="{{ event.title }}">
+        {% else %}
+          <div class="event-card-placeholder"><i class="bi bi-calendar-event"></i></div>
+        {% endif %}
+        <div class="event-card-body d-flex flex-column flex-grow-1">
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            {% if event.category %}<span class="badge-soft d-inline-block">{{ event.category.name }}</span>{% endif %}
+            <span class="badge-soft {% if event.status == 'published' %}success{% elif event.status == 'cancelled' %}danger{% else %}accent{% endif %} d-inline-block">{{ event.get_status_display }}</span>
+          </div>
+          <h5 class="mb-2"><a href="{{ event.get_absolute_url }}" class="text-reset">{{ event.title }}</a></h5>
+          <div class="event-meta"><i class="bi bi-calendar3"></i> {{ event.start_date|date:"M d, Y - g:i A" }}</div>
+          <div class="event-meta"><i class="bi bi-geo-alt"></i> {{ event.location }}</div>
+          <div class="text-muted-custom small mt-2">Bookmarked {{ favorite.created_at|date:"M d, Y" }}</div>
+          <div class="mt-auto d-flex justify-content-between align-items-center pt-3">
+            <span class="fw-semibold">{% if event.is_free %}Free{% else %}₹{{ event.price }}{% endif %}</span>
+            <a href="{{ event.get_absolute_url }}" class="btn btn-sm btn-outline-light">View Details</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-heart d-block mb-3"></i>
+        <h5>Your wishlist is empty</h5>
+        <p class="text-muted-custom mb-3">Tap the heart icon on any event to save it here.</p>
+        <a href="{% url 'events:event_list' %}" class="btn btn-primary">Browse Events</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Announcements{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Announcements</h1>
+      <p class="text-muted-custom mb-0">Platform-wide updates.</p>
+    </div>
+    {% if can_manage %}
+    <a href="{% url 'support:announcement_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>New Announcement</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container section-sm">
+  {% for announcement in announcements %}
+  <div class="glass-card p-4 mb-3">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h5 class="mb-1">{{ announcement.title }}</h5>
+        <p class="text-muted-custom small mb-2">{{ announcement.created_at|date:"M d, Y" }}{% if not announcement.is_active %} · <span class="text-warning">Inactive</span>{% endif %}</p>
+      </div>
+      {% if can_manage %}
+      <div class="d-flex gap-2 flex-shrink-0 ms-3">
+        <a href="{% url 'support:announcement_edit' announcement.pk %}" class="text-muted-custom"><i class="bi bi-pencil"></i></a>
+        <a href="{% url 'support:announcement_delete' announcement.pk %}" class="text-danger"><i class="bi bi-trash"></i></a>
+      </div>
+      {% endif %}
+    </div>
+    <p class="mb-0" style="white-space: pre-line;">{{ announcement.body }}</p>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <i class="bi bi-megaphone d-block mb-3"></i>
+    <h5>No announcements right now</h5>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

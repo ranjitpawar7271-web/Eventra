@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Edit Staff Profile{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4"><i class="bi bi-pencil me-2 text-info"></i>Edit {{ profile.user.username }}</h3>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Employee ID</label>
+              {{ form.employee_id }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Department</label>
+              {{ form.department }}
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Designation</label>
+              {{ form.designation }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone Number</label>
+              {{ form.phone_number }}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Skills</label>
+            {{ form.skills }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Hire Date</label>
+            {{ form.hire_date }}
+          </div>
+          <div class="form-check mb-4">
+            {{ form.is_active }}
+            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active</label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-2"></i>Save</button>
+            <a href="{% url 'staff:staff_detail' profile.pk %}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

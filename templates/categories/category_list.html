@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load permission_extras %}
+{% block title %}Categories{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h1>Event Categories</h1>
+      <p class="text-muted-custom mb-0">Browse events grouped by category.</p>
+    </div>
+    {% if can_create %}
+    <a href="{% url 'categories:category_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Category</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container section-sm">
+  <div class="row g-4">
+    {% for category in categories %}
+    <div class="col-sm-6 col-lg-4">
+      <div class="glass-card p-4 h-100">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="icon-tile"><i class="bi {{ category.icon }}"></i></div>
+          {% if category|can_manage:user %}
+          <div class="dropdown">
+            <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
+            <ul class="dropdown-menu dropdown-menu-end" style="background: var(--card); border: 1px solid var(--border);">
+              <li><a class="dropdown-item" href="{% url 'categories:category_update' category.slug %}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+              <li><a class="dropdown-item text-danger" href="{% url 'categories:category_delete' category.slug %}"><i class="bi bi-trash me-2"></i>Delete</a></li>
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+        <h5 class="mb-2">{{ category.name }}</h5>
+        <p class="text-muted-custom mb-3">{{ category.description|default:"No description provided." }}</p>
+        <a href="{% url 'events:event_list' %}?category={{ category.slug }}" class="badge-soft">{{ category.event_count }} event{{ category.event_count|pluralize }}</a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state">
+        <i class="bi bi-tags d-block mb-3"></i>
+        <h5>No categories yet</h5>
+        {% if can_create %}<a href="{% url 'categories:category_create' %}" class="btn btn-primary mt-2">Add the First Category</a>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

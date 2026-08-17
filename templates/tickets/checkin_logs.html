@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Attendance - {{ event.title }}{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></li>
+      <li class="breadcrumb-item active text-muted-custom">Attendance Report</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h2 class="mb-1">Attendance Report</h2>
+      <p class="text-muted-custom mb-0">{{ event.title }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'tickets:checkin_logs_export' event.slug %}" class="btn btn-outline-light"><i class="bi bi-download me-2"></i>Export CSV</a>
+      <a href="{% url 'tickets:scanner' event.slug %}" class="btn btn-primary"><i class="bi bi-upc-scan me-2"></i>Open Scanner</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4" id="attendance-stats" data-stats-url="{% url 'tickets:checkin_stats_json' event.slug %}">
+    <div class="col-sm-6 col-xl-2">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-people"></i></div>
+        <div><p class="stat-value" data-stat="registered_count">{{ registered_count }}</p><p class="stat-label">Registered</p></div></div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-check-circle"></i></div>
+        <div><p class="stat-value" data-stat="checked_in_count">{{ checked_in_count }}</p><p class="stat-label">Checked In</p></div></div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-hourglass-split"></i></div>
+        <div><p class="stat-value" data-stat="issued_count">{{ issued_count }}</p><p class="stat-label">Not Arrived</p></div></div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-percent"></i></div>
+        <div><p class="stat-value" data-stat="attendance_rate">{{ attendance_rate }}%</p><p class="stat-label">Attendance Rate</p></div></div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-files"></i></div>
+        <div><p class="stat-value" data-stat="duplicate_attempts">{{ duplicate_attempts }}</p><p class="stat-label">Duplicate Attempts</p></div></div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+      <div class="glass-card dashboard-stat-card"><div class="icon-tile"><i class="bi bi-shield-exclamation"></i></div>
+        <div><p class="stat-value" data-stat="invalid_attempts">{{ invalid_attempts }}</p><p class="stat-label">Invalid Scans</p></div></div>
+    </div>
+  </div>
+
+  <div class="glass-card p-4">
+    <div class="dashboard-panel-title"><span><i class="bi bi-clock-history text-info me-2"></i>Scan Log</span></div>
+    {% if logs %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr><th>Time</th><th>Ticket</th><th>Attendee</th><th>Result</th><th>Scanned By</th><th>Detail</th></tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>{{ log.scanned_at|date:"M d, Y - g:i:s A" }}</td>
+            <td>{% if log.ticket %}<code>{{ log.ticket.ticket_code }}</code>{% else %}—{% endif %}</td>
+            <td>{% if log.ticket %}{{ log.ticket.participant.get_full_name|default:log.ticket.participant.username }}{% else %}—{% endif %}</td>
+            <td>
+              <span class="badge-soft {% if log.result == 'checked_in' or log.result == 'checked_out' %}success{% elif log.result == 'duplicate_rejected' %}accent{% else %}danger{% endif %}">
+                {{ log.get_result_display }}
+              </span>
+            </td>
+            <td>{% if log.scanned_by %}{{ log.scanned_by.get_full_name|default:log.scanned_by.username }}{% else %}—{% endif %}</td>
+            <td class="text-muted-custom small">{{ log.detail }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-clock-history d-block mb-3"></i>
+      <h5>No scans yet</h5>
+      <p class="text-muted-custom mb-0">Once staff start scanning tickets at the door, every attempt — successful or not — will show up here.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  (function () {
+    var statsEl = document.getElementById('attendance-stats');
+    if (!statsEl) return;
+    var url = statsEl.getAttribute('data-stats-url');
+
+    function poll() {
+      fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.stats) return;
+          Object.keys(data.stats).forEach(function (key) {
+            var el = statsEl.querySelector('[data-stat="' + key + '"]');
+            if (el) {
+              el.textContent = key === 'attendance_rate' ? data.stats[key] + '%' : data.stats[key];
+            }
+          });
+        })
+        .catch(function () { /* silent — dashboard just won't refresh this cycle */ });
+    }
+    setInterval(poll, 8000);
+  })();
+</script>
+{% endblock %}

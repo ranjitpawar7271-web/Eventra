@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}New Contract{% endblock %}
+{% block content %}
+<div class="container section-sm">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="glass-card p-4 p-md-5">
+        <h3 class="mb-4"><i class="bi bi-file-earmark-text me-2 text-info"></i>New Contract — {{ vendor.company_name }}</h3>
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            {{ form.title }}
+            {% for error in form.title.errors %}<div class="invalid-feedback d-block small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Related Event <span class="text-muted-custom small">(optional)</span></label>
+            {{ form.event }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            {{ form.description }}
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Amount (₹)</label>
+              {{ form.amount }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Start Date</label>
+              {{ form.start_date }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">End Date</label>
+              {{ form.end_date }}
+            </div>
+          </div>
+          {% if form.non_field_errors %}{% endif %}
+          <div class="mb-4">
+            <label class="form-label">Contract Document <span class="text-muted-custom small">(optional)</span></label>
+            {{ form.document }}
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-2"></i>Create Contract</button>
+            <a href="{{ vendor.get_absolute_url }}" class="btn btn-outline-light px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
