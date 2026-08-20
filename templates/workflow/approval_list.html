@@ -1,78 +1,448 @@
 {% extends 'base.html' %}
-{% block title %}Approvals{% endblock %}
+
+{% block title %}Approval Center{% endblock %}
+
 {% block content %}
+
 <div class="container py-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2 class="fw-bold mb-1"><i class="bi bi-clipboard-check text-info me-2"></i>Approvals</h2>
-      <p class="text-muted mb-0">Requests waiting on a Super Admin / Staff decision.</p>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="{% url 'workflow:settings' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-gear me-1"></i>Workflow settings</a>
-      <a href="{% url 'workflow:announce' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-megaphone me-1"></i>Broadcast</a>
-    </div>
-  </div>
 
-  <div class="glass-card p-4 mb-4">
-    <h5 class="mb-3">Pending <span class="badge bg-warning text-dark">{{ pending_steps|length }}</span></h5>
-    {% if pending_steps %}
-      <div class="table-responsive">
-        <table class="table table-borderless align-middle mb-0">
-          <thead><tr class="text-muted small text-uppercase">
-            <th>Item</th><th>Stage</th><th>Requested by</th><th>Requested</th><th class="text-end">Decision</th>
-          </tr></thead>
-          <tbody>
-          {% for step in pending_steps %}
-            <tr style="border-top: 1px solid var(--border);">
-              <td>{{ step.content_object }}</td>
-              <td><span class="badge bg-secondary">{{ step.get_stage_display }}</span></td>
-              <td>{{ step.requested_by|default:"—" }}</td>
-              <td class="text-muted small">{{ step.requested_at|date:"M d, Y H:i" }}</td>
-              <td class="text-end">
-                <div class="d-flex gap-2 justify-content-end">
-                  <form method="post" action="{% url 'workflow:approval_decide' step.pk 'approve' %}" class="d-flex gap-1">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i> Approve</button>
-                  </form>
-                  <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="collapse" data-bs-target="#reject-{{ step.pk }}">
-                    <i class="bi bi-x-lg"></i> Reject
-                  </button>
-                </div>
-                <div class="collapse mt-2" id="reject-{{ step.pk }}">
-                  <form method="post" action="{% url 'workflow:approval_decide' step.pk 'reject' %}" class="d-flex gap-2">
-                    {% csrf_token %}
-                    <input type="text" name="comment" class="form-control form-control-sm" placeholder="Reason (optional)">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Confirm reject</button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p class="text-muted mb-0">Nothing waiting on you right now.</p>
-    {% endif %}
-  </div>
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
 
-  <div class="glass-card p-4">
-    <h5 class="mb-3">Recently decided</h5>
-    {% if decided_steps %}
-      <ul class="list-unstyled mb-0">
-        {% for step in decided_steps %}
-          <li class="d-flex justify-content-between py-2" style="border-bottom: 1px solid var(--border);">
-            <span>
-              {% if step.status == 'approved' %}<i class="bi bi-check-circle text-success me-2"></i>{% else %}<i class="bi bi-x-circle text-danger me-2"></i>{% endif %}
-              {{ step.content_object }} <span class="text-muted">— {{ step.get_status_display }}</span>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+        <div>
+            <span class="dashboard-section-kicker">
+                ADMINISTRATION
             </span>
-            <span class="text-muted small">{{ step.decided_by|default:"—" }} · {{ step.decided_at|date:"M d, H:i" }}</span>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="text-muted mb-0">No decisions yet.</p>
-    {% endif %}
-  </div>
+
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-shield-check text-info me-2"></i>
+                Approval Center
+            </h2>
+
+            <p class="text-muted mb-0">
+                Review and manage requests waiting for an administrative decision.
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <a href="{% url 'workflow:settings' %}"
+               class="btn btn-outline-light btn-sm">
+
+                <i class="bi bi-gear me-1"></i>
+                Workflow Settings
+
+            </a>
+
+            <a href="{% url 'workflow:announce' %}"
+               class="btn btn-outline-light btn-sm">
+
+                <i class="bi bi-megaphone me-1"></i>
+                Broadcast
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY CARDS
+         ===================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <!-- Pending -->
+        <div class="col-6 col-lg-4">
+
+            <div class="glass-card approval-summary-card">
+
+                <div class="approval-summary-icon pending">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+
+                <div>
+                    <span>Pending Requests</span>
+
+                    <strong>
+                        {{ pending_steps|length }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Recently Decided -->
+        <div class="col-6 col-lg-4">
+
+            <div class="glass-card approval-summary-card">
+
+                <div class="approval-summary-icon decided">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+
+                <div>
+                    <span>Recent Decisions</span>
+
+                    <strong>
+                        {{ decided_steps|length }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Status -->
+        <div class="col-12 col-lg-4">
+
+            <div class="glass-card approval-summary-card">
+
+                <div class="approval-summary-icon secure">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+
+                <div>
+                    <span>Access Level</span>
+
+                    <strong>
+                        Admin
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PENDING APPROVALS
+         ===================================================== -->
+
+    <div class="glass-card approval-panel mb-4">
+
+        <div class="approval-panel-header">
+
+            <div>
+                <span class="dashboard-panel-kicker">
+                    ACTION REQUIRED
+                </span>
+
+                <h4>
+                    Pending Approvals
+
+                    {% if pending_steps %}
+                        <span class="approval-count-badge">
+                            {{ pending_steps|length }}
+                        </span>
+                    {% endif %}
+                </h4>
+
+                <p>
+                    These requests are waiting for your decision.
+                </p>
+            </div>
+
+            <div class="approval-panel-header-icon">
+                <i class="bi bi-clipboard-check"></i>
+            </div>
+
+        </div>
+
+
+        {% if pending_steps %}
+
+        <div class="approval-list">
+
+            {% for step in pending_steps %}
+
+            <div class="approval-request-card">
+
+                <!-- Request Icon -->
+
+                <div class="approval-request-icon">
+
+                    {% if step.stage == 'publish' %}
+                        <i class="bi bi-calendar-event"></i>
+                    {% elif step.stage == 'budget' %}
+                        <i class="bi bi-wallet2"></i>
+                    {% elif step.stage == 'vendor' %}
+                        <i class="bi bi-truck"></i>
+                    {% else %}
+                        <i class="bi bi-file-earmark-check"></i>
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Request Information -->
+
+                <div class="approval-request-content">
+
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+
+                        <h5>
+                            {{ step.content_object }}
+                        </h5>
+
+                        <span class="badge bg-secondary">
+                            {{ step.get_stage_display }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="approval-request-meta">
+
+                        <span>
+                            <i class="bi bi-person"></i>
+                            {{ step.requested_by|default:"Unknown user" }}
+                        </span>
+
+                        <span>
+                            <i class="bi bi-clock"></i>
+                            {{ step.requested_at|date:"M d, Y H:i" }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Actions -->
+
+                <div class="approval-actions">
+
+                    <!-- Approve -->
+
+                    <form method="post"
+                          action="{% url 'workflow:approval_decide' step.pk 'approve' %}">
+
+                        {% csrf_token %}
+
+                        <button type="submit"
+                                class="btn btn-success btn-sm">
+
+                            <i class="bi bi-check-lg me-1"></i>
+                            Approve
+
+                        </button>
+
+                    </form>
+
+
+                    <!-- Reject -->
+
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#reject-{{ step.pk }}"
+                            aria-expanded="false">
+
+                        <i class="bi bi-x-lg me-1"></i>
+                        Reject
+
+                    </button>
+
+                </div>
+
+
+                <!-- Reject Form -->
+
+                <div class="collapse approval-reject-box"
+                     id="reject-{{ step.pk }}">
+
+                    <form method="post"
+                          action="{% url 'workflow:approval_decide' step.pk 'reject' %}">
+
+                        {% csrf_token %}
+
+                        <label class="form-label">
+                            Rejection reason
+                        </label>
+
+                        <div class="d-flex gap-2">
+
+                            <input type="text"
+                                   name="comment"
+                                   class="form-control form-control-sm"
+                                   placeholder="Enter a reason (optional)">
+
+                            <button type="submit"
+                                    class="btn btn-danger btn-sm">
+
+                                Confirm
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <!-- Empty State -->
+
+        <div class="approval-empty-state">
+
+            <div class="approval-empty-icon">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+
+            <h5>
+                All caught up!
+            </h5>
+
+            <p>
+                There are no requests waiting for approval right now.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         RECENT DECISIONS
+         ===================================================== -->
+
+    <div class="glass-card approval-panel">
+
+        <div class="approval-panel-header">
+
+            <div>
+                <span class="dashboard-panel-kicker">
+                    HISTORY
+                </span>
+
+                <h4>
+                    Recently Decided
+                </h4>
+
+                <p>
+                    Latest approval decisions made by administrators.
+                </p>
+            </div>
+
+            <div class="approval-panel-header-icon history">
+                <i class="bi bi-clock-history"></i>
+            </div>
+
+        </div>
+
+
+        {% if decided_steps %}
+
+        <div class="approval-history-list">
+
+            {% for step in decided_steps %}
+
+            <div class="approval-history-item">
+
+                <div class="approval-history-status">
+
+                    {% if step.status == 'approved' %}
+
+                        <span class="approval-status-icon approved">
+                            <i class="bi bi-check-lg"></i>
+                        </span>
+
+                    {% else %}
+
+                        <span class="approval-status-icon rejected">
+                            <i class="bi bi-x-lg"></i>
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="approval-history-content">
+
+                    <strong>
+                        {{ step.content_object }}
+                    </strong>
+
+                    <div class="approval-history-meta">
+
+                        <span>
+                            {{ step.get_status_display }}
+                        </span>
+
+                        <span>
+                            <i class="bi bi-person"></i>
+                            {{ step.decided_by|default:"Unknown" }}
+                        </span>
+
+                        <span>
+                            <i class="bi bi-clock"></i>
+                            {{ step.decided_at|date:"M d, Y H:i" }}
+                        </span>
+
+                    </div>
+
+                    {% if step.comment %}
+
+                    <div class="approval-comment">
+
+                        <i class="bi bi-chat-left-text"></i>
+
+                        {{ step.comment }}
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="approval-empty-state compact">
+
+            <div class="approval-empty-icon">
+                <i class="bi bi-clock-history"></i>
+            </div>
+
+            <h5>
+                No decisions yet
+            </h5>
+
+            <p>
+                Completed approval decisions will appear here.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
 </div>
+
 {% endblock %}

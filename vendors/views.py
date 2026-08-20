@@ -1,7 +1,10 @@
+import os
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import FileResponse, Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -207,6 +210,46 @@ def vendor_service_delete(request, pk):
         service.delete()
         messages.success(request, "Service removed.")
     return redirect('vendors:vendor_detail', slug=vendor.slug)
+
+
+def _serve_private_file(field_file, download_name=None):
+    """Stream a private FileField's contents as an attachment instead of
+    redirecting to (or leaking) a public `/media/...` URL. Callers must
+    already have checked object-level permission before reaching this —
+    this helper only handles "does the file actually exist".
+    """
+    if not field_file:
+        raise Http404("No file has been uploaded for this record.")
+    filename = download_name or os.path.basename(field_file.name)
+    return FileResponse(field_file.open('rb'), as_attachment=True, filename=filename)
+
+
+@login_required
+def vendor_document_download(request, pk):
+    """Authenticated, permission-checked download for a VendorDocument
+    (license/certification/insurance/contract upload) — replaces the
+    previous direct `{{ doc.file.url }}` link, which exposed the file at
+    a public, unauthenticated media URL regardless of who could see the
+    page it was linked from.
+    """
+    document = get_object_or_404(VendorDocument, pk=pk)
+    vendor = document.vendor
+    if not (_owns_vendor(request.user, vendor) or _can_manage_vendors(request.user)):
+        return HttpResponseForbidden("You don't have permission to download this document.")
+    ext = os.path.splitext(document.file.name)[1]
+    return _serve_private_file(document.file, download_name=f"{document.title}{ext}")
+
+
+@login_required
+def vendor_contract_document_download(request, pk):
+    """Authenticated, permission-checked download for a VendorContract's
+    signed document — same rationale as `vendor_document_download`, and
+    the same permission rule already used by `vendor_contract_detail`."""
+    contract = get_object_or_404(VendorContract, pk=pk)
+    if not (_can_manage_contract(request.user, contract) or _owns_vendor(request.user, contract.vendor)):
+        return HttpResponseForbidden("You don't have permission to download this document.")
+    ext = os.path.splitext(contract.document.name)[1] if contract.document else ''
+    return _serve_private_file(contract.document, download_name=f"{contract.title}-contract{ext}")
 
 
 @login_required

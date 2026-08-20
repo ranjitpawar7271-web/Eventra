@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -185,3 +186,110 @@ class BudgetPermissionTests(TestCase):
         expense.refresh_from_db()
         self.assertEqual(expense.status, 'paid')
         self.assertEqual(budget.total_expenses, Decimal('300'))
+
+
+def _pdf_file(name='receipt.pdf', size=512):
+    return SimpleUploadedFile(name, b'%PDF-1.4\n' + b'x' * size, content_type='application/pdf')
+
+
+class ExpenseReceiptDownloadPermissionTests(TestCase):
+    """TASK 2/6: authenticated, permission-checked downloads for a
+    receipt — replaces the old direct `/media/...` link, reusing the
+    exact same `_can_manage_budget` rule as the budget detail page."""
+
+    def setUp(self):
+        self.organizer = User.objects.create_user(username='rc_org', password='pw12345!', role=User.ORGANIZER)
+        self.other_organizer = User.objects.create_user(username='rc_org2', password='pw12345!', role=User.ORGANIZER)
+        self.staff = User.objects.create_user(username='rc_staff', password='pw12345!', role=User.STAFF)
+        now = timezone.now()
+        self.event = Event.objects.create(
+            title='Receipt Test Event', description='desc', organizer=self.organizer,
+            location='Hall', start_date=now + timedelta(days=5), end_date=now + timedelta(days=5, hours=2),
+            capacity=50, price=0,
+        )
+        self.budget = EventBudget.objects.create(event=self.event, estimated_budget=Decimal('1000'))
+        self.expense = Expense.objects.create(
+            budget=self.budget, category='catering', description='Snacks', amount=Decimal('100'),
+            date=date.today(), receipt=_pdf_file(), recorded_by=self.organizer,
+        )
+
+    def _download_url(self):
+        return reverse('budget:expense_receipt_download', args=[self.expense.pk])
+
+    def test_owning_organizer_can_download(self):
+        self.client.login(username='rc_org', password='pw12345!')
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('attachment', response['Content-Disposition'])
+
+    def test_staff_can_download(self):
+        self.client.login(username='rc_staff', password='pw12345!')
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_unrelated_organizer_cannot_download(self):
+        self.client.login(username='rc_org2', password='pw12345!')
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 403)
+
+    def test_unauthenticated_user_redirected_to_login(self):
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login', response['Location'])
+
+    def test_missing_receipt_returns_404_for_authorized_user(self):
+        self.expense.receipt = None
+        self.expense.save(update_fields=['receipt'])
+        self.client.login(username='rc_org', password='pw12345!')
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 404)
+
+    def test_direct_media_url_is_no_longer_linked_in_template(self):
+        self.client.login(username='rc_org', password='pw12345!')
+        response = self.client.get(reverse('budget:budget_detail', kwargs={'event_slug': self.event.slug}))
+        self.assertContains(response, self._download_url())
+        self.assertNotContains(response, self.expense.receipt.url)
+
+
+class ExpenseReceiptUploadValidationTests(TestCase):
+    """TASK 3/6: extension/size validation on expense receipt uploads."""
+
+    def setUp(self):
+        self.organizer = User.objects.create_user(username='eu_org', password='pw12345!', role=User.ORGANIZER)
+        now = timezone.now()
+        self.event = Event.objects.create(
+            title='Upload Validation Event', description='desc', organizer=self.organizer,
+            location='Hall', start_date=now + timedelta(days=5), end_date=now + timedelta(days=5, hours=2),
+            capacity=50, price=0,
+        )
+        EventBudget.objects.create(event=self.event, estimated_budget=Decimal('1000'))
+        self.client.login(username='eu_org', password='pw12345!')
+
+    def _upload(self, receipt_file):
+        return self.client.post(
+            reverse('budget:expense_create', kwargs={'event_slug': self.event.slug}),
+            {
+                'category': 'catering', 'description': 'Snacks', 'amount': '50',
+                'date': date.today(), 'status': 'pending', 'receipt': receipt_file,
+            },
+        )
+
+    def test_valid_receipt_upload_succeeds(self):
+        self._upload(_pdf_file())
+        self.assertEqual(Expense.objects.count(), 1)
+        expense = Expense.objects.first()
+        self.assertTrue(expense.receipt.name.startswith('expense_receipts/'))
+        self.assertNotIn('receipt.pdf', expense.receipt.name)
+
+    def test_invalid_extension_rejected(self):
+        bad_file = SimpleUploadedFile('script.php', b'<?php echo "hi"; ?>', content_type='application/x-php')
+        self._upload(bad_file)
+        self.assertEqual(Expense.objects.count(), 0)
+
+    def test_oversized_receipt_rejected(self):
+        from event_management.validators import DOCUMENT_MAX_SIZE_MB
+        too_big = SimpleUploadedFile(
+            'huge.pdf', b'x' * (DOCUMENT_MAX_SIZE_MB * 1024 * 1024 + 1), content_type='application/pdf'
+        )
+        self._upload(too_big)
+        self.assertEqual(Expense.objects.count(), 0)

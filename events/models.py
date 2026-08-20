@@ -5,6 +5,9 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from categories.models import Category
+from event_management.validators import (
+    safe_upload_to, validate_image_contents, validate_image_extension, validate_image_size,
+)
 
 
 class Event(models.Model):
@@ -48,7 +51,10 @@ class Event(models.Model):
     end_date = models.DateTimeField()
     capacity = models.PositiveIntegerField(default=50)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    image = models.ImageField(upload_to='event_images/', blank=True, null=True)
+    image = models.ImageField(
+        upload_to=safe_upload_to('event_images'), blank=True, null=True,
+        validators=[validate_image_extension, validate_image_size, validate_image_contents],
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='published')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -73,6 +79,17 @@ class Event(models.Model):
     def get_absolute_url(self):
         return reverse('events:event_detail', kwargs={'slug': self.slug})
 
+    def get_registration_qr_url(self):
+        """URL of the PNG endpoint that renders this event's registration
+        QR code (see events.views.event_registration_qr). The QR itself
+        encodes `get_absolute_url()` — the public event detail page,
+        which already carries the Register button/form — not a separate
+        registration system, so there is exactly one entry point for
+        registration whether a participant clicks, types the link, or
+        scans the code.
+        """
+        return reverse('events:event_registration_qr', kwargs={'slug': self.slug})
+
     @property
     def seats_taken(self):
         return self.registrations.filter(status='confirmed').count()
@@ -88,6 +105,19 @@ class Event(models.Model):
     @property
     def is_upcoming(self):
         return self.start_date >= timezone.now()
+
+    @property
+    def is_registration_open(self):
+        """True only when this event can still accept *new* registrations
+        or waitlist joins: it must be published (not draft, cancelled, or
+        completed) and not yet started. Capacity is checked separately
+        (a full event still counts as "open" — it routes to the
+        waitlist instead). Centralizing this here means every entry
+        point (direct register, waitlist join/claim/promote) reads the
+        same rule instead of re-implementing — and possibly
+        drifting out of sync with — their own version of it.
+        """
+        return self.status == 'published' and self.start_date > timezone.now()
 
     @property
     def is_free(self):

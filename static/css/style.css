@@ -270,29 +270,60 @@ html[data-theme="dark"] .icon-tile.icon-tile-success {
 }
 
 /* -------------------- Top Navbar (Phase 2: Navigation) -------------------- */
+
 .site-navbar {
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.site-navbar .navbar-brand,
-.site-navbar .navbar-brand span:not([class*="text-"]) { color: var(--text); }
+/* Navbar Eventra Brand */
+.site-navbar .navbar-brand {
+  color: var(--text);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
 
+/* Eventra icon */
+.site-navbar .navbar-brand i {
+  font-size: 27px;
+}
+
+/* Eventra text */
+.site-navbar .navbar-brand span {
+  font-size: 25px;
+  font-weight: 800;
+}
+
+/* Navbar links */
 .site-navbar .nav-link {
   color: var(--text-muted);
   font-weight: 500;
   padding: 0.55rem 0.9rem !important;
 }
-.site-navbar .nav-link:hover { color: var(--text); }
-.site-navbar .nav-link.active { color: var(--primary); }
 
+.site-navbar .nav-link:hover {
+  color: var(--text);
+}
+
+.site-navbar .nav-link.active {
+  color: var(--primary);
+}
+
+/* Mobile navbar button */
 .site-navbar .navbar-toggler {
   border-color: var(--border);
 }
+
 .site-navbar .navbar-toggler-icon {
   filter: var(--navbar-toggler-filter, none);
 }
+
 html[data-theme="dark"] .site-navbar .navbar-toggler-icon {
   --navbar-toggler-filter: invert(1);
 }

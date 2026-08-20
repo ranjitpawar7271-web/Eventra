@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.db import models
 
+from event_management.validators import (
+    safe_upload_to, validate_image_contents, validate_image_extension, validate_image_size,
+)
+
 
 class Photo(models.Model):
     """One photo in an event's gallery. "Event Highlights" isn't a
@@ -16,7 +20,10 @@ class Photo(models.Model):
     """
 
     event = models.ForeignKey('events.Event', on_delete=models.CASCADE, related_name='photos')
-    image = models.ImageField(upload_to='event_gallery/')
+    image = models.ImageField(
+        upload_to=safe_upload_to('event_gallery'),
+        validators=[validate_image_extension, validate_image_size, validate_image_contents],
+    )
     caption = models.CharField(max_length=200, blank=True)
     is_highlight = models.BooleanField(
         default=False,

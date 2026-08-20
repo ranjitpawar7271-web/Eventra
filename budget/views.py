@@ -1,5 +1,8 @@
+import os
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import FileResponse, Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 
 from events.models import Event
@@ -127,6 +130,24 @@ def expense_status_update(request, pk):
             form.save()
             messages.success(request, "Expense status updated.")
     return redirect('budget:budget_detail', event_slug=event.slug)
+
+
+@login_required
+def expense_receipt_download(request, pk):
+    """Authenticated, permission-checked download for an Expense's
+    receipt — replaces the previous direct `{{ expense.receipt.url }}`
+    link. Reuses the exact same `_can_manage_budget` rule already
+    enforced on the budget page these receipts are listed on, so a
+    financial document is never a step less protected than the page
+    that links to it."""
+    expense = get_object_or_404(Expense, pk=pk)
+    event = expense.budget.event
+    if not _can_manage_budget(request.user, event):
+        return HttpResponseForbidden("You don't have permission to download this receipt.")
+    if not expense.receipt:
+        raise Http404("No receipt has been uploaded for this expense.")
+    filename = f"receipt-{expense.pk}{os.path.splitext(expense.receipt.name)[1]}"
+    return FileResponse(expense.receipt.open('rb'), as_attachment=True, filename=filename)
 
 
 @login_required

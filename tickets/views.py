@@ -1,7 +1,9 @@
 from io import BytesIO
+import time
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import OperationalError, transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -313,6 +315,41 @@ def _process_scan(request, event, action):
             {'success': False, 'result': 'invalid', 'message': 'No QR data received.'}, status=400
         )
 
+    handler = _handle_checkin if action == 'checkin' else _handle_checkout
+
+    # The whole scan — resolving the token, the event-match check, and
+    # the handler's own status transition — is retried as one unit on a
+    # transient database lock error. SQLite in particular can report
+    # cross-connection contention as an immediate error rather than
+    # always waiting, regardless of a configured busy timeout, so even
+    # the read in Ticket.resolve_token() below can occasionally hit
+    # this. A short bounded retry absorbs that instead of surfacing a
+    # raw error to a scan that would very likely succeed a moment
+    # later — it does not change the actual duplicate-check-in logic
+    # inside the handler in any way.
+    attempts = 5
+    for attempt in range(1, attempts + 1):
+        try:
+            return _resolve_and_handle_scan(request, event, token, handler)
+        except OperationalError:
+            if attempt == attempts:
+                break
+            time.sleep(0.05 * attempt)
+
+    # Every attempt hit a transient DB error — fail safe, no stack trace,
+    # nothing recorded as a successful check-in/out for this attempt.
+    CheckInLog.objects.create(
+        event=event, ticket=None, scanned_by=request.user,
+        result=CheckInLog.RESULT_INVALID,
+        detail="Scan couldn't be processed due to a temporary system delay — please rescan."
+    )
+    return JsonResponse({
+        'success': False, 'result': 'invalid',
+        'message': "Couldn't process the scan right now — please try again.",
+    })
+
+
+def _resolve_and_handle_scan(request, event, token, handler):
     ticket = Ticket.resolve_token(token)
 
     if ticket is None:
@@ -336,44 +373,96 @@ def _process_scan(request, event, action):
             'message': f"This ticket is for a different event ({ticket.event.title}).",
         })
 
-    if action == 'checkin':
-        return _handle_checkin(request, event, ticket)
-    return _handle_checkout(request, event, ticket)
+    return handler(request, event, ticket)
+
+
 
 
 def _handle_checkin(request, event, ticket):
-    if ticket.status == Ticket.STATUS_CHECKED_IN:
-        when = timezone.localtime(ticket.checked_in_at).strftime('%I:%M %p') if ticket.checked_in_at else 'earlier'
-        who = (ticket.checked_in_by.get_full_name() or ticket.checked_in_by.username) if ticket.checked_in_by else 'staff'
-        detail = f"Already checked in at {when} by {who}."
+    """The critical section: read-then-transition a ticket's status to
+    CHECKED_IN. Two scanners hitting this for the same ticket at almost
+    the same instant is the exact race this function has to close — see
+    the module-level note below for why it's implemented this way.
+    """
+    with transaction.atomic():
+        # Lock this ticket's row for the rest of the transaction. On a
+        # database that honors row locks (Postgres/MySQL — a typical
+        # production choice for this project), a second concurrent
+        # request for the *same* ticket blocks here until the first
+        # request's transaction commits, then this SELECT re-reads the
+        # now-updated row instead of acting on stale data.
+        ticket = Ticket.objects.select_for_update().select_related(
+            'registration', 'registration__event', 'registration__user'
+        ).get(pk=ticket.pk)
+
+        if ticket.status == Ticket.STATUS_CHECKED_IN:
+            when = timezone.localtime(ticket.checked_in_at).strftime('%I:%M %p') if ticket.checked_in_at else 'earlier'
+            who = (ticket.checked_in_by.get_full_name() or ticket.checked_in_by.username) if ticket.checked_in_by else 'staff'
+            detail = f"Already checked in at {when} by {who}."
+            CheckInLog.objects.create(
+                event=event, ticket=ticket, scanned_by=request.user,
+                result=CheckInLog.RESULT_DUPLICATE, detail=detail
+            )
+            return JsonResponse({
+                'success': False, 'result': 'duplicate', 'message': detail,
+                'ticket': _ticket_payload(ticket),
+            })
+
+        if not ticket.is_usable:
+            detail = f"Ticket is {ticket.get_status_display()} and cannot be checked in."
+            CheckInLog.objects.create(
+                event=event, ticket=ticket, scanned_by=request.user,
+                result=CheckInLog.RESULT_INVALID, detail=detail
+            )
+            return JsonResponse({'success': False, 'result': 'invalid', 'message': detail})
+
+        # The row lock above (select_for_update) is what makes a second
+        # request block and re-read on Postgres/MySQL. But this project's
+        # dev/test database is SQLite, which has no row-level locking at
+        # all — Django silently drops the "FOR UPDATE" clause there, so
+        # the SELECT above never blocks anyone on that backend. The
+        # UPDATE ... WHERE below is what actually guarantees correctness
+        # on *every* backend: a single UPDATE statement conditioned on
+        # the status we just read is atomic in any SQL database
+        # regardless of locking support, so if two requests race, only
+        # the one whose WHERE clause still matches can succeed — the
+        # loser's `updated` count comes back 0, not an error and not a
+        # second "success".
+        now = timezone.now()
+        updated = Ticket.objects.filter(pk=ticket.pk, status=ticket.status).update(
+            status=Ticket.STATUS_CHECKED_IN, checked_in_at=now, checked_in_by=request.user,
+        )
+        if not updated:
+            # Lost the race between our read and this write.
+            ticket.refresh_from_db()
+            when = timezone.localtime(ticket.checked_in_at).strftime('%I:%M %p') if ticket.checked_in_at else 'earlier'
+            who = (ticket.checked_in_by.get_full_name() or ticket.checked_in_by.username) if ticket.checked_in_by else 'staff'
+            detail = f"Already checked in at {when} by {who}."
+            CheckInLog.objects.create(
+                event=event, ticket=ticket, scanned_by=request.user,
+                result=CheckInLog.RESULT_DUPLICATE, detail=detail
+            )
+            return JsonResponse({
+                'success': False, 'result': 'duplicate', 'message': detail,
+                'ticket': _ticket_payload(ticket),
+            })
+
+        # Reflect the change on the in-memory object (the queryset
+        # `.update()` above doesn't touch it) so the log/payload below
+        # and the notification after this block see the right status.
+        ticket.status = Ticket.STATUS_CHECKED_IN
+        ticket.checked_in_at = now
+        ticket.checked_in_by = request.user
+
+        detail = f"Checked in {ticket.participant.get_full_name() or ticket.participant.username}."
         CheckInLog.objects.create(
             event=event, ticket=ticket, scanned_by=request.user,
-            result=CheckInLog.RESULT_DUPLICATE, detail=detail
+            result=CheckInLog.RESULT_CHECKED_IN, detail=detail
         )
-        return JsonResponse({
-            'success': False, 'result': 'duplicate', 'message': detail,
-            'ticket': _ticket_payload(ticket),
-        })
 
-    if not ticket.is_usable:
-        detail = f"Ticket is {ticket.get_status_display()} and cannot be checked in."
-        CheckInLog.objects.create(
-            event=event, ticket=ticket, scanned_by=request.user,
-            result=CheckInLog.RESULT_INVALID, detail=detail
-        )
-        return JsonResponse({'success': False, 'result': 'invalid', 'message': detail})
-
-    ticket.status = Ticket.STATUS_CHECKED_IN
-    ticket.checked_in_at = timezone.now()
-    ticket.checked_in_by = request.user
-    ticket.save(update_fields=['status', 'checked_in_at', 'checked_in_by'])
-
-    detail = f"Checked in {ticket.participant.get_full_name() or ticket.participant.username}."
-    CheckInLog.objects.create(
-        event=event, ticket=ticket, scanned_by=request.user,
-        result=CheckInLog.RESULT_CHECKED_IN, detail=detail
-    )
-
+    # Notification sent after the transaction commits — no reason to hold
+    # the row lock (on backends that have one) through a step that isn't
+    # part of the status transition itself.
     from workflow.models import Notification
     Notification.notify(
         ticket.participant,
@@ -392,35 +481,59 @@ def _handle_checkin(request, event, ticket):
 
 
 def _handle_checkout(request, event, ticket):
-    if ticket.status != Ticket.STATUS_CHECKED_IN:
-        detail = "Ticket hasn't been checked in yet, so it can't be checked out."
+    with transaction.atomic():
+        ticket = Ticket.objects.select_for_update().select_related(
+            'registration', 'registration__event', 'registration__user'
+        ).get(pk=ticket.pk)
+
+        if ticket.status != Ticket.STATUS_CHECKED_IN:
+            detail = "Ticket hasn't been checked in yet, so it can't be checked out."
+            CheckInLog.objects.create(
+                event=event, ticket=ticket, scanned_by=request.user,
+                result=CheckInLog.RESULT_INVALID, detail=detail
+            )
+            return JsonResponse({'success': False, 'result': 'invalid', 'message': detail})
+
+        if ticket.checked_out_at:
+            when = timezone.localtime(ticket.checked_out_at).strftime('%I:%M %p')
+            detail = f"Already checked out at {when}."
+            CheckInLog.objects.create(
+                event=event, ticket=ticket, scanned_by=request.user,
+                result=CheckInLog.RESULT_DUPLICATE, detail=detail
+            )
+            return JsonResponse({
+                'success': False, 'result': 'duplicate', 'message': detail,
+                'ticket': _ticket_payload(ticket),
+            })
+
+        # Same conditional-UPDATE guard as check-in, for the same reason:
+        # `checked_out_at IS NULL` in the WHERE clause is what actually
+        # closes the race on every backend, not just the row lock above.
+        now = timezone.now()
+        updated = Ticket.objects.filter(pk=ticket.pk, checked_out_at__isnull=True).update(
+            checked_out_at=now, checked_out_by=request.user,
+        )
+        if not updated:
+            ticket.refresh_from_db()
+            when = timezone.localtime(ticket.checked_out_at).strftime('%I:%M %p') if ticket.checked_out_at else 'earlier'
+            detail = f"Already checked out at {when}."
+            CheckInLog.objects.create(
+                event=event, ticket=ticket, scanned_by=request.user,
+                result=CheckInLog.RESULT_DUPLICATE, detail=detail
+            )
+            return JsonResponse({
+                'success': False, 'result': 'duplicate', 'message': detail,
+                'ticket': _ticket_payload(ticket),
+            })
+
+        ticket.checked_out_at = now
+        ticket.checked_out_by = request.user
+
+        detail = f"Checked out {ticket.participant.get_full_name() or ticket.participant.username}."
         CheckInLog.objects.create(
             event=event, ticket=ticket, scanned_by=request.user,
-            result=CheckInLog.RESULT_INVALID, detail=detail
+            result=CheckInLog.RESULT_CHECKED_OUT, detail=detail
         )
-        return JsonResponse({'success': False, 'result': 'invalid', 'message': detail})
-
-    if ticket.checked_out_at:
-        when = timezone.localtime(ticket.checked_out_at).strftime('%I:%M %p')
-        detail = f"Already checked out at {when}."
-        CheckInLog.objects.create(
-            event=event, ticket=ticket, scanned_by=request.user,
-            result=CheckInLog.RESULT_DUPLICATE, detail=detail
-        )
-        return JsonResponse({
-            'success': False, 'result': 'duplicate', 'message': detail,
-            'ticket': _ticket_payload(ticket),
-        })
-
-    ticket.checked_out_at = timezone.now()
-    ticket.checked_out_by = request.user
-    ticket.save(update_fields=['checked_out_at', 'checked_out_by'])
-
-    detail = f"Checked out {ticket.participant.get_full_name() or ticket.participant.username}."
-    CheckInLog.objects.create(
-        event=event, ticket=ticket, scanned_by=request.user,
-        result=CheckInLog.RESULT_CHECKED_OUT, detail=detail
-    )
     return JsonResponse({
         'success': True, 'result': 'checked_out', 'message': detail,
         'ticket': _ticket_payload(ticket),

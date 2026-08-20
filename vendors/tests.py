@@ -1,10 +1,11 @@
 from datetime import date
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
 from users.models import User
-from .models import VendorContract, VendorPayment, VendorProfile, VendorRating, VendorService
+from .models import VendorContract, VendorDocument, VendorPayment, VendorProfile, VendorRating, VendorService
 
 
 class VendorProfileModelTests(TestCase):
@@ -168,3 +169,151 @@ class VendorPermissionViewTests(TestCase):
         )
         contract.refresh_from_db()
         self.assertEqual(contract.status, 'signed')
+
+
+def _pdf_file(name='doc.pdf', size=1024):
+    return SimpleUploadedFile(name, b'%PDF-1.4\n' + b'x' * size, content_type='application/pdf')
+
+
+class VendorDocumentDownloadPermissionTests(TestCase):
+    """TASK 2/6: authenticated, permission-checked downloads for
+    VendorDocument — replaces the old direct `/media/...` link."""
+
+    def setUp(self):
+        self.vendor_user = User.objects.create_user(username='dv_owner', password='pw12345!', role=User.VENDOR)
+        self.profile = VendorProfile.objects.create(
+            user=self.vendor_user, company_name='Doc Test Co', service_type='other', status='approved',
+        )
+        self.document = VendorDocument.objects.create(
+            vendor=self.profile, title='Business License', document_type='license',
+            file=_pdf_file(), uploaded_by=self.vendor_user,
+        )
+        self.other_vendor_user = User.objects.create_user(username='dv_other', password='pw12345!', role=User.VENDOR)
+        self.staff = User.objects.create_user(username='dv_staff', password='pw12345!', role=User.STAFF)
+        self.participant = User.objects.create_user(username='dv_participant', password='pw12345!', role=User.PARTICIPANT)
+
+    def _download_url(self):
+        return reverse('vendors:vendor_document_download', args=[self.document.pk])
+
+    def test_owner_can_download(self):
+        self.client.force_login(self.vendor_user)
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('attachment', response['Content-Disposition'])
+
+    def test_staff_manager_can_download(self):
+        self.client.force_login(self.staff)
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_unrelated_vendor_cannot_download(self):
+        self.client.force_login(self.other_vendor_user)
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 403)
+
+    def test_unrelated_participant_cannot_download(self):
+        self.client.force_login(self.participant)
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 403)
+
+    def test_unauthenticated_user_redirected_to_login(self):
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login', response['Location'])
+
+    def test_direct_media_url_is_no_longer_linked_in_template(self):
+        # The template must route through the protected download view, not
+        # a raw storage URL, for anyone who can see the vendor's page.
+        self.client.force_login(self.vendor_user)
+        response = self.client.get(reverse('vendors:vendor_detail', args=[self.profile.slug]))
+        self.assertContains(response, reverse('vendors:vendor_document_download', args=[self.document.pk]))
+        self.assertNotContains(response, self.document.file.url)
+
+
+class VendorContractDocumentDownloadPermissionTests(TestCase):
+    def setUp(self):
+        self.vendor_user = User.objects.create_user(username='cv_owner', password='pw12345!', role=User.VENDOR)
+        self.profile = VendorProfile.objects.create(
+            user=self.vendor_user, company_name='Contract Test Co', service_type='other', status='approved',
+        )
+        self.organizer = User.objects.create_user(username='cv_org', password='pw12345!', role=User.ORGANIZER)
+        self.other_organizer = User.objects.create_user(username='cv_org2', password='pw12345!', role=User.ORGANIZER)
+        self.contract = VendorContract.objects.create(
+            vendor=self.profile, title='AV Setup', amount=5000, created_by=self.organizer,
+            document=_pdf_file('contract.pdf'),
+        )
+
+    def _download_url(self):
+        return reverse('vendors:vendor_contract_document_download', args=[self.contract.pk])
+
+    def test_vendor_owner_can_download(self):
+        self.client.force_login(self.vendor_user)
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_creating_organizer_can_download(self):
+        self.client.force_login(self.organizer)
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_unrelated_organizer_cannot_download(self):
+        self.client.force_login(self.other_organizer)
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 403)
+
+    def test_unauthenticated_user_redirected_to_login(self):
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 302)
+
+    def test_missing_document_returns_404_for_authorized_user(self):
+        self.contract.document = None
+        self.contract.save(update_fields=['document'])
+        self.client.force_login(self.vendor_user)
+        response = self.client.get(self._download_url())
+        self.assertEqual(response.status_code, 404)
+
+
+class VendorDocumentUploadValidationTests(TestCase):
+    """TASK 3/6: extension, size, and safe-filename validation on the
+    upload path actually used by the app (vendor_document_upload view)."""
+
+    def setUp(self):
+        self.vendor_user = User.objects.create_user(username='uv_owner', password='pw12345!', role=User.VENDOR)
+        self.profile = VendorProfile.objects.create(
+            user=self.vendor_user, company_name='Upload Test Co', service_type='other', status='approved',
+        )
+        self.client.force_login(self.vendor_user)
+
+    def _upload(self, file_obj):
+        return self.client.post(
+            reverse('vendors:vendor_document_upload', args=[self.profile.slug]),
+            {'title': 'Some Document', 'document_type': 'other', 'file': file_obj},
+        )
+
+    def test_valid_pdf_upload_succeeds(self):
+        response = self._upload(_pdf_file())
+        self.assertEqual(VendorDocument.objects.filter(vendor=self.profile).count(), 1)
+        doc = VendorDocument.objects.get(vendor=self.profile)
+        # Stored under a random name, not the original filename.
+        self.assertNotIn('doc.pdf', doc.file.name)
+        self.assertTrue(doc.file.name.startswith('vendor_documents/'))
+
+    def test_invalid_extension_rejected(self):
+        bad_file = SimpleUploadedFile('malware.exe', b'MZ fake executable', content_type='application/octet-stream')
+        self._upload(bad_file)
+        self.assertEqual(VendorDocument.objects.filter(vendor=self.profile).count(), 0)
+
+    def test_oversized_file_rejected(self):
+        from event_management.validators import DOCUMENT_MAX_SIZE_MB
+        too_big = SimpleUploadedFile(
+            'huge.pdf', b'x' * (DOCUMENT_MAX_SIZE_MB * 1024 * 1024 + 1), content_type='application/pdf'
+        )
+        self._upload(too_big)
+        self.assertEqual(VendorDocument.objects.filter(vendor=self.profile).count(), 0)
+
+    def test_path_traversal_filename_is_neutralized_on_disk(self):
+        sneaky = SimpleUploadedFile('../../evil.pdf', b'%PDF-1.4\nx' * 100, content_type='application/pdf')
+        self._upload(sneaky)
+        doc = VendorDocument.objects.get(vendor=self.profile)
+        self.assertNotIn('..', doc.file.name)
+        self.assertTrue(doc.file.name.startswith('vendor_documents/'))

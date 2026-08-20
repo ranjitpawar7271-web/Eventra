@@ -161,6 +161,18 @@
         <p class="text-muted-custom small">Issue certificates or badges to attendees who checked in.</p>
         <a href="{% url 'certificates:certificate_hub' event.slug %}" class="btn btn-outline-light btn-sm w-100">Manage Certificates</a>
       </div>
+
+      <div class="glass-card p-4 mb-4 text-center">
+        <div class="dashboard-panel-title justify-content-center"><span><i class="bi bi-qr-code text-info me-2"></i>Registration QR</span></div>
+        <p class="text-muted-custom small">Share this link or QR so anyone can open the event and register — it's the same page and the same registration rules as this one.</p>
+        <img src="{% url 'events:event_registration_qr' event.slug %}" alt="Event registration QR code" class="img-fluid rounded mb-3" style="max-width: 200px; background: #fff; padding: 10px;">
+        <div class="input-group input-group-sm mb-2">
+          <input type="text" id="registrationLinkInput" class="form-control" value="{{ request.scheme }}://{{ request.get_host }}{{ event.get_absolute_url }}" readonly>
+          <button class="btn btn-outline-light" type="button" onclick="copyRegistrationLink()"><i class="bi bi-clipboard me-1"></i>Copy</button>
+        </div>
+        <div id="registrationLinkCopiedNote" class="small text-success" style="visibility: hidden;">Link copied!</div>
+        <a href="{% url 'events:event_registration_qr' event.slug %}" download="event-{{ event.slug }}-registration-qr.png" class="btn btn-outline-light btn-sm w-100 mt-1"><i class="bi bi-download me-2"></i>Download QR</a>
+      </div>
       {% endif %}
 
       {% if can_view_budget or is_registered %}
@@ -271,4 +283,22 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function copyRegistrationLink() {
+    var input = document.getElementById('registrationLinkInput');
+    var note = document.getElementById('registrationLinkCopiedNote');
+    navigator.clipboard.writeText(input.value).then(function () {
+      note.style.visibility = 'visible';
+      setTimeout(function () { note.style.visibility = 'hidden'; }, 2000);
+    }).catch(function () {
+      input.select();
+      document.execCommand('copy');
+      note.style.visibility = 'visible';
+      setTimeout(function () { note.style.visibility = 'hidden'; }, 2000);
+    });
+  }
+</script>
 {% endblock %}

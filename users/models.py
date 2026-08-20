@@ -1,6 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from event_management.validators import (
+    safe_upload_to, validate_image_contents, validate_image_extension, validate_image_size,
+)
+
 
 class User(AbstractUser):
     """Custom user model extending Django's AbstractUser with profile
@@ -43,7 +47,10 @@ class User(AbstractUser):
 
     phone_number = models.CharField(max_length=15, blank=True)
     bio = models.TextField(max_length=300, blank=True)
-    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
+    profile_image = models.ImageField(
+        upload_to=safe_upload_to('profile_images'), blank=True, null=True,
+        validators=[validate_image_extension, validate_image_size, validate_image_contents],
+    )
     is_organizer = models.BooleanField(
         default=False,
         help_text="Organizers can create and manage events. Kept for backward "

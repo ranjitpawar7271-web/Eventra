@@ -3,6 +3,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 
+from event_management.validators import (
+    safe_upload_to, validate_document_extension, validate_document_size,
+)
+
 
 class EventBudget(models.Model):
     """The financial anchor for a single Event — one-to-one, same pattern
@@ -211,7 +215,10 @@ class Expense(models.Model):
     description = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField()
-    receipt = models.FileField(upload_to='expense_receipts/', blank=True, null=True)
+    receipt = models.FileField(
+        upload_to=safe_upload_to('expense_receipts'), blank=True, null=True,
+        validators=[validate_document_extension, validate_document_size],
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,

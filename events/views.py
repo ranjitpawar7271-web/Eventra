@@ -5,6 +5,7 @@ from django.db.models import Avg, Count, F, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 import datetime
 
 from categories.models import Category
@@ -18,6 +19,11 @@ from .models import Event, Registration, WaitlistEntry
 from . import waitlist_services
 from reviews.models import Review
 from reviews.views import can_review
+# Reuses the project's one existing QR-rendering helper (tickets/utils.py)
+# instead of adding a second `qrcode` call site. That function is a plain
+# "string -> PNG bytes" helper with no Ticket-model coupling, so importing
+# it here doesn't pull in any ticket/check-in behavior.
+from tickets.utils import render_qr_png
 
 
 def event_list(request):
@@ -198,6 +204,29 @@ def event_detail(request, slug):
         'my_review': my_review,
     }
     return render(request, 'events/event_detail.html', context)
+
+
+def event_registration_qr(request, slug):
+    """Registration QR code — completely separate from the ticket QR in
+    the `tickets` app (that one is for post-payment check-in, this one is
+    for *reaching* the event's public registration page in the first
+    place). It is intentionally public/unauthenticated and un-gated by
+    ownership: it just renders a PNG of the event's own public detail-page
+    URL, exactly like scanning it, typing it, or clicking a shared link
+    all land on the same page and go through the same server-side
+    registration checks (capacity, lifecycle, auth) — this view never
+    touches Registration/Payment/Ticket at all, so there is only one real
+    registration code path anywhere in the project.
+
+    No image file is written to disk (matching how tickets/views.py's
+    ticket_qr_image works) — the PNG is regenerated on every request from
+    the event's current slug, so nothing gets out of sync if a slug were
+    ever to change.
+    """
+    event = get_object_or_404(Event, slug=slug)
+    registration_url = request.build_absolute_uri(event.get_absolute_url())
+    png = render_qr_png(registration_url)
+    return HttpResponse(png, content_type='image/png')
 
 
 def _sync_venue_booking(event, user):
@@ -432,10 +461,29 @@ def my_events(request):
 
 
 @login_required
+@require_POST
 def event_register(request, slug):
     event = get_object_or_404(Event, slug=slug)
 
     from payments import services as payment_services
+
+    existing = Registration.objects.filter(event=event, user=request.user).first()
+    if existing and existing.status == 'confirmed':
+        messages.info(request, "You're already registered for this event.")
+        return redirect('events:event_detail', slug=slug)
+
+    # Server-side lifecycle check — the register button/form is already
+    # hidden in the template for closed events, but that's UI only. A
+    # direct POST (crafted request, stale tab, replayed form) must be
+    # rejected here too: no registering for a draft, cancelled, or
+    # completed event, and none after the event has already started.
+    if not event.is_registration_open:
+        messages.error(
+            request,
+            f"Registration for \"{event.title}\" is closed — it's either "
+            "not published yet, cancelled, completed, or already underway."
+        )
+        return redirect('events:event_detail', slug=slug)
 
     # A notified waitlist entry gets first claim on the seat it was
     # offered, even if someone else's request raced in first.
@@ -446,11 +494,6 @@ def event_register(request, slug):
             return redirect('events:event_detail', slug=slug)
         payment = payment_services.get_or_create_pending_payment(claimed)
         return redirect('payments:checkout', payment_id=payment.id)
-
-    existing = Registration.objects.filter(event=event, user=request.user).first()
-    if existing and existing.status == 'confirmed':
-        messages.info(request, "You're already registered for this event.")
-        return redirect('events:event_detail', slug=slug)
 
     if event.is_full and not (existing and existing.status == 'pending_payment'):
         messages.warning(request, "Sorry, this event is already full. You can join the waitlist instead.")
@@ -480,8 +523,24 @@ def event_register(request, slug):
 
 
 @login_required
+@require_POST
 def join_waitlist(request, slug):
     event = get_object_or_404(Event, slug=slug)
+
+    # Same lifecycle rule as registration: a draft, cancelled, or
+    # completed event — or one that's already started — can't be
+    # joined via the waitlist either. Checked here (not just relying on
+    # waitlist_services.join_waitlist's own guard) so the messaging is
+    # specific instead of falling through to a generic "already
+    # registered" message.
+    if not event.is_registration_open:
+        messages.error(
+            request,
+            f"Registration for \"{event.title}\" is closed — it's either "
+            "not published yet, cancelled, completed, or already underway."
+        )
+        return redirect('events:event_detail', slug=slug)
+
     if not event.is_full:
         messages.info(request, "This event still has open seats — register directly instead.")
         return redirect('events:event_detail', slug=slug)
@@ -497,12 +556,12 @@ def join_waitlist(request, slug):
 
 
 @login_required
+@require_POST
 def leave_waitlist(request, slug):
     event = get_object_or_404(Event, slug=slug)
-    if request.method == 'POST':
-        left = waitlist_services.leave_waitlist(event, request.user)
-        if left:
-            messages.success(request, "You've left the waitlist.")
+    left = waitlist_services.leave_waitlist(event, request.user)
+    if left:
+        messages.success(request, "You've left the waitlist.")
     return redirect('events:event_detail', slug=slug)
 
 

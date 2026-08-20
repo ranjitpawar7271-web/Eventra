@@ -40,9 +40,65 @@ def dashboard_view(request):
         event__organizer=user, status='confirmed'
     ).count()
 
-    my_upcoming_count = my_events.filter(start_date__gte=timezone.now()).count()
-    my_completed_count = my_events.filter(status='completed').count()
-    my_cancelled_count = my_events.filter(status='cancelled').count()
+    # --- Role-based dashboard event stats -------------------------------
+    # These sit next to "Total Categories" (always platform-wide —
+    # categories aren't owned by a user) with no "My" prefix, so for a
+    # Participant "Total Events"/"Total Participants" must also read as
+    # platform-wide snapshots rather than 0 (Participants don't organize
+    # events, so the organizer-scoped `my_events`/`total_participants`
+    # above are always empty for them). The "My ..." cards below them
+    # have the same underlying problem: they were being computed from
+    # events the user *organizes*, which is always empty for a
+    # Participant. Both are fixed together here, role-branched once.
+    # Organizer/Staff/Super Admin/Vendor/Volunteer keep the original
+    # "my own events" scoping for all four — unchanged.
+    if user.is_participant:
+        # All events regardless of status (published/ongoing, completed,
+        # cancelled) — draft events are excluded since those aren't
+        # public-facing and a Participant would never see them anywhere
+        # else in the product.
+        total_events_count = Event.objects.exclude(status='draft').count()
+        # Distinct users with at least one confirmed registration,
+        # across every event on the platform.
+        total_participants_count = Registration.objects.filter(
+            status='confirmed'
+        ).values('user').distinct().count()
+
+        # For a Participant these stats must be derived from *their
+        # registrations* (events/models.Registration), which is the
+        # project's existing source of truth for "a user's relationship
+        # to an event" from the participant side (see reviews.can_review,
+        # which uses this exact confirmed-registration + event-timing
+        # pattern to decide whether a participant "attended" an event).
+        #
+        # `.values('event').distinct()` guards against double-counting if
+        # duplicate registrations ever exist, even though
+        # Registration.Meta.unique_together already prevents them at the
+        # DB level going forward.
+        now = timezone.now()
+        my_upcoming_count = my_registrations.filter(
+            event__status='published', event__start_date__gte=now
+        ).values('event').distinct().count()
+        my_completed_count = my_registrations.exclude(
+            event__status='cancelled'
+        ).filter(
+            models.Q(event__status='completed') | models.Q(event__end_date__lt=now)
+        ).values('event').distinct().count()
+        # A participant's own cancelled *registrations* — not events the
+        # organizer cancelled while the registration itself stayed
+        # confirmed. Those are two different things and must not be
+        # merged into one count.
+        my_cancelled_count = Registration.objects.filter(
+            user=user, status='cancelled'
+        ).values('event').distinct().count()
+    else:
+        # Organizer / Staff / Super Admin / Vendor / Volunteer: unchanged,
+        # event-organizer-based behavior.
+        total_events_count = my_events.count()
+        total_participants_count = total_participants
+        my_upcoming_count = my_events.filter(start_date__gte=timezone.now()).count()
+        my_completed_count = my_events.filter(status='completed').count()
+        my_cancelled_count = my_events.filter(status='cancelled').count()
 
     # --- Workflow snapshot (Module 9) -------------------------------
     my_pending_approvals = ApprovalStep.objects.filter(
@@ -81,9 +137,9 @@ def dashboard_view(request):
     my_payments_refunded = my_payments_qs.filter(status=Payment.STATUS_REFUNDED).count()
 
     context = {
-        'total_events': my_events.count(),
+        'total_events': total_events_count,
         'total_categories': Category.objects.count(),
-        'total_participants': total_participants,
+        'total_participants': total_participants_count,
         'my_registrations_count': my_registrations.count(),
         'my_upcoming_count': my_upcoming_count,
         'my_completed_count': my_completed_count,
@@ -214,4 +270,3 @@ def activity_feed(request):
     entries = entries[:ACTIVITY_FEED_LIMIT]
 
     return render(request, 'dashboard/activity_feed.html', {'entries': entries})
-

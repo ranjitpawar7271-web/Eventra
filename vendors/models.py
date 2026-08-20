@@ -6,6 +6,15 @@ from django.db.models import Avg
 from django.urls import reverse
 from django.utils.text import slugify
 
+from event_management.validators import (
+    safe_upload_to,
+    validate_document_extension,
+    validate_document_size,
+    validate_image_contents,
+    validate_image_extension,
+    validate_image_size,
+)
+
 
 class VendorProfile(models.Model):
     """The business profile for a user with role=vendor.
@@ -40,7 +49,10 @@ class VendorProfile(models.Model):
     phone_number = models.CharField(max_length=15, blank=True)
     address = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
-    logo = models.ImageField(upload_to='vendor_logos/', blank=True, null=True)
+    logo = models.ImageField(
+        upload_to=safe_upload_to('vendor_logos'), blank=True, null=True,
+        validators=[validate_image_extension, validate_image_size, validate_image_contents],
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
@@ -136,7 +148,10 @@ class VendorDocument(models.Model):
     vendor = models.ForeignKey(VendorProfile, on_delete=models.CASCADE, related_name='documents')
     title = models.CharField(max_length=200)
     document_type = models.CharField(max_length=20, choices=DOCUMENT_TYPE_CHOICES, default='other')
-    file = models.FileField(upload_to='vendor_documents/')
+    file = models.FileField(
+        upload_to=safe_upload_to('vendor_documents'),
+        validators=[validate_document_extension, validate_document_size],
+    )
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
@@ -166,7 +181,10 @@ class VendorContract(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    document = models.FileField(upload_to='vendor_contracts/', blank=True, null=True)
+    document = models.FileField(
+        upload_to=safe_upload_to('vendor_contracts'), blank=True, null=True,
+        validators=[validate_document_extension, validate_document_size],
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)

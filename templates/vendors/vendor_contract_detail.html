@@ -17,7 +17,7 @@
         <div class="event-meta"><i class="bi bi-cash-coin"></i> Paid: ₹{{ contract.total_paid }} · Balance: ₹{{ contract.balance_due }}</div>
         {% if contract.start_date %}<div class="event-meta"><i class="bi bi-calendar3"></i> {{ contract.start_date }} – {{ contract.end_date|default:"?" }}</div>{% endif %}
         <p class="mt-3">{{ contract.description|default:"No description provided." }}</p>
-        {% if contract.document %}<a href="{{ contract.document.url }}" target="_blank" class="btn btn-sm btn-outline-light"><i class="bi bi-file-earmark me-1"></i>View Document</a>{% endif %}
+        {% if contract.document %}<a href="{% url 'vendors:vendor_contract_document_download' contract.pk %}" class="btn btn-sm btn-outline-light"><i class="bi bi-file-earmark me-1"></i>Download Document</a>{% endif %}
 
         {% if can_manage %}
         <form method="post" action="{% url 'vendors:vendor_contract_update_status' contract.pk %}" class="d-flex gap-2 align-items-end mt-4">

@@ -112,7 +112,7 @@
         <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
           {% for doc in documents %}
           <li class="d-flex justify-content-between align-items-center border-bottom pb-2 divider-soft">
-            <a href="{{ doc.file.url }}" target="_blank" class="text-reset"><i class="bi bi-file-earmark me-2"></i>{{ doc.title }} <span class="text-muted-custom small">({{ doc.get_document_type_display }})</span></a>
+            <a href="{% url 'vendors:vendor_document_download' doc.pk %}" class="text-reset"><i class="bi bi-file-earmark me-2"></i>{{ doc.title }} <span class="text-muted-custom small">({{ doc.get_document_type_display }})</span></a>
             <form method="post" action="{% url 'vendors:vendor_document_delete' doc.pk %}" onsubmit="return confirm('Delete this document?');">
               {% csrf_token %}<button class="btn btn-sm btn-outline-danger">Delete</button>
             </form>

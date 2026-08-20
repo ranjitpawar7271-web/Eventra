@@ -3,6 +3,10 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
+from event_management.validators import (
+    safe_upload_to, validate_image_contents, validate_image_extension, validate_image_size,
+)
+
 
 class Sponsor(models.Model):
     """A sponsoring company/organization — the reusable catalog entry.
@@ -21,7 +25,10 @@ class Sponsor(models.Model):
 
     company_name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True, blank=True)
-    logo = models.ImageField(upload_to='sponsor_logos/', blank=True, null=True)
+    logo = models.ImageField(
+        upload_to=safe_upload_to('sponsor_logos'), blank=True, null=True,
+        validators=[validate_image_extension, validate_image_size, validate_image_contents],
+    )
     website = models.URLField(blank=True)
     contact_person = models.CharField(max_length=150, blank=True)
     email = models.EmailField(blank=True)

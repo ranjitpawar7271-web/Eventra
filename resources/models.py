@@ -6,6 +6,10 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 
+from event_management.validators import (
+    safe_upload_to, validate_image_contents, validate_image_extension, validate_image_size,
+)
+
 
 class Resource(models.Model):
     """A pool of physical, allocatable inventory (chairs, projectors, etc).
@@ -33,7 +37,10 @@ class Resource(models.Model):
     description = models.TextField(blank=True)
     total_quantity = models.PositiveIntegerField(help_text="Total units owned/available in inventory.")
     unit = models.CharField(max_length=30, default='pcs', help_text="e.g. pcs, sets, units")
-    image = models.ImageField(upload_to='resource_images/', blank=True, null=True)
+    image = models.ImageField(
+        upload_to=safe_upload_to('resource_images'), blank=True, null=True,
+        validators=[validate_image_extension, validate_image_size, validate_image_contents],
+    )
     is_active = models.BooleanField(default=True, help_text="Inactive resources are hidden from allocation.")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='resources_created'

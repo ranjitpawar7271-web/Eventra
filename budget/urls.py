@@ -7,6 +7,7 @@ app_name = 'budget'
 urlpatterns = [
     path('', views.budget_list, name='budget_list'),
     path('expenses/<int:pk>/status/', views.expense_status_update, name='expense_status_update'),
+    path('expenses/<int:pk>/receipt/', views.expense_receipt_download, name='expense_receipt_download'),
     path('expenses/<int:pk>/delete/', views.expense_delete, name='expense_delete'),
     path('revenue/<int:pk>/delete/', views.revenue_delete, name='revenue_delete'),
     path('<slug:event_slug>/', views.budget_detail, name='budget_detail'),

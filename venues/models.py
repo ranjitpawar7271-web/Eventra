@@ -4,6 +4,10 @@ from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
 
+from event_management.validators import (
+    safe_upload_to, validate_image_contents, validate_image_extension, validate_image_size,
+)
+
 
 class Venue(models.Model):
     """A physical location that can be booked for events."""
@@ -18,7 +22,10 @@ class Venue(models.Model):
         help_text="Comma-separated list, e.g. 'Wi-Fi, Parking, Projector, AC'"
     )
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to='venue_images/', blank=True, null=True)
+    image = models.ImageField(
+        upload_to=safe_upload_to('venue_images'), blank=True, null=True,
+        validators=[validate_image_extension, validate_image_size, validate_image_contents],
+    )
     is_active = models.BooleanField(
         default=True,
         help_text="Inactive venues are hidden from booking but keep their history."

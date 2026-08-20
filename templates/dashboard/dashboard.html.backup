@@ -8,13 +8,13 @@
 
     {% include 'includes/sidebar.html' %}
 
-    <div class="dashboard-main">
+    <main class="dashboard-main">
 
         <!-- =====================================================
-             DASHBOARD WELCOME HEADER
+             WELCOME HEADER
              ===================================================== -->
 
-        <div class="dashboard-welcome">
+        <div class="dashboard-welcome mb-4">
 
             <div class="dashboard-welcome-content">
 
@@ -22,29 +22,163 @@
                     <i class="bi bi-grid-1x2-fill"></i>
                 </div>
 
-                <div class="dashboard-welcome-text">
+                <div>
+                    <p class="dashboard-eyebrow mb-1">
+                        <i class="bi bi-stars me-1"></i>
+                        Eventra Dashboard
+                    </p>
 
-                    <div class="dashboard-welcome-label">
-                        <i class="bi bi-stars"></i>
-                        <span>Eventra Dashboard</span>
-                    </div>
-
-                    <h1>
-                        Welcome back,
-                        {{ user.first_name|default:user.username }}
-                        👋
-                    </h1>
+                    <h2 class="dashboard-welcome-title mb-1">
+                        Welcome back, {{ user.first_name|default:user.username }} 👋
+                    </h2>
 
                     <div class="dashboard-welcome-meta">
-
-                        <span class="dashboard-role-badge">
-                            {{ user.get_role_display|default:"Organizer" }}
+                        <span class="badge-soft accent">
+                            {{ user.get_role_display }}
                         </span>
 
                         <span class="dashboard-welcome-description">
                             Here's what's happening with your events today.
                         </span>
+                    </div>
+                </div>
 
+            </div>
+
+            {% if user.can_manage_events %}
+
+            <a href="{% url 'events:event_create' %}"
+               class="btn btn-primary dashboard-create-btn">
+
+                <i class="bi bi-plus-circle me-2"></i>
+                Create Event
+
+            </a>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- =====================================================
+             SUPER ADMIN SYSTEM OVERVIEW
+             ===================================================== -->
+
+        {% if is_admin_view %}
+
+        <section class="dashboard-section glass-card p-4 mb-4">
+
+            <div class="dashboard-section-header">
+
+                <div>
+                    <span class="dashboard-section-kicker">
+                        ADMINISTRATION
+                    </span>
+
+                    <h3 class="dashboard-section-title">
+                        <i class="bi bi-shield-check text-accent me-2"></i>
+                        System Overview
+                    </h3>
+
+                    <p class="dashboard-section-description">
+                        Platform-wide events, finance and user statistics.
+                    </p>
+                </div>
+
+                <div class="dashboard-section-icon">
+                    <i class="bi bi-bar-chart-line"></i>
+                </div>
+
+            </div>
+
+
+            <!-- Event Statistics -->
+
+            <div class="dashboard-subsection">
+
+                <div class="dashboard-subsection-title">
+                    <i class="bi bi-calendar-event"></i>
+                    Event Activity
+                </div>
+
+                <div class="row g-3">
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-calendar3"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_total_events }}</p>
+                                <p class="stat-label">Total Events</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-broadcast"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_active_events }}</p>
+                                <p class="stat-label">Active</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-calendar-week"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_upcoming_events }}</p>
+                                <p class="stat-label">Upcoming</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_completed_events }}</p>
+                                <p class="stat-label">Completed</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-x-circle"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_cancelled_events }}</p>
+                                <p class="stat-label">Cancelled</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-ticket-perforated"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_total_registrations }}</p>
+                                <p class="stat-label">Confirmed Regs</p>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -52,160 +186,209 @@
             </div>
 
 
-            <!-- Create Event Button -->
+            <!-- Admin Approval -->
 
-            <div class="dashboard-welcome-action">
+            <div class="dashboard-admin-action mt-3">
 
-                <a href="{% url 'events:event_create' %}"
-                class="btn btn-primary dashboard-create-event">
+                <div class="dashboard-admin-action-icon">
+                    <i class="bi bi-clipboard-check"></i>
+                </div>
 
-                    <i class="bi bi-plus-circle me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>Pending Approvals</strong>
+                    <p class="mb-0 text-muted-custom small">
+                        Events waiting for administrative approval.
+                    </p>
+                </div>
 
-                    <span>Create Event</span>
+                <div class="dashboard-admin-action-value">
+                    {{ sys_pending_approvals }}
+                </div>
 
+                <a href="{% url 'workflow:approval_list' %}"
+                   class="btn btn-sm btn-primary">
+                    Review
                 </a>
 
             </div>
 
-        </div>
 
-
-        <!-- =====================================================
-             SUPER ADMIN PLATFORM OVERVIEW
-             ===================================================== -->
-
-        {% if is_admin_view %}
-
-        <section class="dashboard-section glass-card p-4 mb-4 super-admin-overview">
-
-            <div class="dashboard-section-header mb-4">
-                <div>
-                    <span class="dashboard-section-kicker">ADMINISTRATION</span>
-                    <h3 class="dashboard-section-title"><i class="bi bi-shield-check text-accent"></i><span>Platform Overview</span></h3>
-                    <p class="dashboard-section-description">Monitor events, users, registrations, approvals and financial activity from one place.</p>
-                </div>
-                <div class="dashboard-section-icon"><i class="bi bi-speedometer2"></i></div>
-            </div>
-
-            <div class="dashboard-subsection">
-                <div class="dashboard-subsection-title"><i class="bi bi-grid-1x2"></i><span>Key Platform Metrics</span></div>
-                <div class="row g-3">
-                    <div class="col-6 col-xl-3"><div class="glass-card dashboard-stat-card admin-kpi-card"><div class="icon-tile"><i class="bi bi-calendar-event"></i></div><div><p class="stat-value">{{ sys_total_events }}</p><p class="stat-label">Total Events</p></div><span class="admin-kpi-caption"><i class="bi bi-calendar-check"></i> Platform events</span></div></div>
-                    <div class="col-6 col-xl-3"><div class="glass-card dashboard-stat-card admin-kpi-card"><div class="icon-tile"><i class="bi bi-people-fill"></i></div><div><p class="stat-value">{{ sys_total_users }}</p><p class="stat-label">Total Users</p></div><span class="admin-kpi-caption"><i class="bi bi-person-check"></i> Registered users</span></div></div>
-                    <div class="col-6 col-xl-3"><div class="glass-card dashboard-stat-card admin-kpi-card"><div class="icon-tile"><i class="bi bi-ticket-perforated"></i></div><div><p class="stat-value">{{ sys_total_registrations }}</p><p class="stat-label">Registrations</p></div><span class="admin-kpi-caption"><i class="bi bi-graph-up"></i> Confirmed registrations</span></div></div>
-                    <div class="col-6 col-xl-3"><div class="glass-card dashboard-stat-card admin-kpi-card"><div class="icon-tile"><i class="bi bi-currency-rupee"></i></div><div><p class="stat-value">₹{{ sys_total_revenue }}</p><p class="stat-label">Total Revenue</p></div><span class="admin-kpi-caption"><i class="bi bi-bar-chart-line"></i> Platform revenue</span></div></div>
-                </div>
-            </div>
+            <!-- Financial Statistics -->
 
             <div class="dashboard-subsection mt-4">
-                <div class="dashboard-subsection-title"><i class="bi bi-calendar3"></i><span>Event Status</span></div>
-                <div class="row g-3">
-                    <div class="col-6 col-md-3"><div class="admin-mini-stat"><div class="admin-mini-stat-icon"><i class="bi bi-broadcast"></i></div><div><strong>{{ sys_active_events }}</strong><span>Active</span></div></div></div>
-                    <div class="col-6 col-md-3"><div class="admin-mini-stat"><div class="admin-mini-stat-icon"><i class="bi bi-calendar-week"></i></div><div><strong>{{ sys_upcoming_events }}</strong><span>Upcoming</span></div></div></div>
-                    <div class="col-6 col-md-3"><div class="admin-mini-stat"><div class="admin-mini-stat-icon"><i class="bi bi-check-circle"></i></div><div><strong>{{ sys_completed_events }}</strong><span>Completed</span></div></div></div>
-                    <div class="col-6 col-md-3"><div class="admin-mini-stat"><div class="admin-mini-stat-icon"><i class="bi bi-x-circle"></i></div><div><strong>{{ sys_cancelled_events }}</strong><span>Cancelled</span></div></div></div>
+
+                <div class="dashboard-subsection-title">
+                    <i class="bi bi-cash-stack"></i>
+                    Financial Overview
                 </div>
+
+                <div class="row g-3">
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">₹{{ sys_total_revenue }}</p>
+                                <p class="stat-label">Total Revenue</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">₹{{ sys_total_expenses }}</p>
+                                <p class="stat-label">Total Expenses</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">₹{{ sys_net_profit }}</p>
+                                <p class="stat-label">Net Profit / Loss</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-truck"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">₹{{ sys_vendor_payments }}</p>
+                                <p class="stat-label">Vendor Payments</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
 
-            <div class="row g-4 mt-1">
-                <div class="col-lg-8"><div class="dashboard-admin-panel"><div class="dashboard-admin-panel-header"><div><span class="dashboard-panel-kicker">FINANCE</span><h4>Financial Overview</h4></div><i class="bi bi-wallet2"></i></div><div class="row g-3">
-                    <div class="col-6 col-md-3"><div class="admin-finance-item"><span>Revenue</span><strong class="text-success">₹{{ sys_total_revenue }}</strong></div></div>
-                    <div class="col-6 col-md-3"><div class="admin-finance-item"><span>Expenses</span><strong>₹{{ sys_total_expenses }}</strong></div></div>
-                    <div class="col-6 col-md-3"><div class="admin-finance-item"><span>Net Profit/Loss</span><strong>₹{{ sys_net_profit }}</strong></div></div>
-                    <div class="col-6 col-md-3"><div class="admin-finance-item"><span>Vendor Payments</span><strong>₹{{ sys_vendor_payments }}</strong></div></div>
-                </div></div></div>
 
-                <div class="col-lg-4">
-
-    <div class="dashboard-admin-panel dashboard-approval-panel">
-
-        <div class="dashboard-admin-panel-header">
-
-            <div>
-                <span class="dashboard-panel-kicker">
-                    ACTION REQUIRED
-                </span>
-
-                <h4>Approval Center</h4>
-            </div>
-
-            <div class="approval-panel-header-icon">
-                <i class="bi bi-clipboard-check"></i>
-            </div>
-
-        </div>
-
-        <div class="approval-dashboard-count">
-
-            <div class="approval-dashboard-number">
-                {{ sys_pending_approvals }}
-            </div>
-
-            <div class="approval-dashboard-label">
-                Pending Approvals
-            </div>
-
-        </div>
-
-        {% if sys_pending_approvals %}
-
-            <div class="approval-dashboard-status pending">
-
-                <i class="bi bi-exclamation-circle"></i>
-
-                <span>
-                    Requests are waiting for your review.
-                </span>
-
-            </div>
-
-            <a href="{% url 'workflow:approval_list' %}"
-               class="btn btn-primary w-100 mt-3">
-
-                <i class="bi bi-shield-check me-1"></i>
-                Review Approvals
-
-            </a>
-
-        {% else %}
-
-            <div class="approval-dashboard-status clear">
-
-                <i class="bi bi-check-circle"></i>
-
-                <span>
-                    No pending approvals. Everything is up to date.
-                </span>
-
-              </div>
-
-              <a href="{% url 'workflow:approval_list' %}"
-                class="btn btn-outline-secondary w-100 mt-3">
-
-                <i class="bi bi-clock-history me-1"></i>
-                View Approval History
-              </a>
-            {% endif %}
-          </div>
-        </div>
-            </div>
+            <!-- User Statistics -->
 
             <div class="dashboard-subsection mt-4">
-                <div class="dashboard-subsection-title"><i class="bi bi-people"></i><span>User Distribution</span></div>
-                <div class="row g-3">
-                    <div class="col-6 col-md-4 col-xl"><div class="admin-user-stat"><div class="admin-user-icon"><i class="bi bi-person"></i></div><strong>{{ sys_total_participants }}</strong><span>Participants</span></div></div>
-                    <div class="col-6 col-md-4 col-xl"><div class="admin-user-stat"><div class="admin-user-icon"><i class="bi bi-person-workspace"></i></div><strong>{{ sys_total_organizers }}</strong><span>Organizers</span></div></div>
-                    <div class="col-6 col-md-4 col-xl"><div class="admin-user-stat"><div class="admin-user-icon"><i class="bi bi-person-badge"></i></div><strong>{{ sys_total_staff }}</strong><span>Staff</span></div></div>
-                    <div class="col-6 col-md-4 col-xl"><div class="admin-user-stat"><div class="admin-user-icon"><i class="bi bi-truck"></i></div><strong>{{ sys_total_vendors }}</strong><span>Vendors</span></div></div>
-                    <div class="col-6 col-md-4 col-xl"><div class="admin-user-stat"><div class="admin-user-icon"><i class="bi bi-heart"></i></div><strong>{{ sys_total_volunteers }}</strong><span>Volunteers</span></div></div>
+
+                <div class="dashboard-subsection-title">
+                    <i class="bi bi-people"></i>
+                    Platform Users
                 </div>
+
+                <div class="row g-3">
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_total_users }}</p>
+                                <p class="stat-label">Total Users</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-person"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_total_participants }}</p>
+                                <p class="stat-label">Participants</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-person-workspace"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_total_organizers }}</p>
+                                <p class="stat-label">Organizers</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_total_staff }}</p>
+                                <p class="stat-label">Staff</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-truck"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_total_vendors }}</p>
+                                <p class="stat-label">Vendors</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="glass-card dashboard-stat-card">
+                            <div class="icon-tile">
+                                <i class="bi bi-heart"></i>
+                            </div>
+
+                            <div>
+                                <p class="stat-value">{{ sys_total_volunteers }}</p>
+                                <p class="stat-label">Volunteers</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
 
-            <div class="dashboard-info-note mt-4"><i class="bi bi-info-circle"></i><span>You are viewing platform-wide statistics as a Super Admin. These metrics include data across the Eventra system.</span></div>
+
+            <div class="dashboard-info-note mt-4">
+                <i class="bi bi-info-circle"></i>
+
+                <span>
+                    Resource-utilization widgets light up once the Resource module is further along.
+                    Approvals, notifications, and the shared calendar are live — see the card above
+                    and the bell icon in the navbar.
+                </span>
+            </div>
 
         </section>
 
         {% endif %}
+
 
         <!-- =====================================================
              NOTIFICATIONS / APPROVALS
@@ -1196,7 +1379,7 @@
 
         {% endif %}
 
-    </div>
+    </main>
 
 </div>
 

@@ -24,9 +24,18 @@ def _next_position(event):
 def join_waitlist(event: Event, user):
     """Add `user` to `event`'s waitlist. Returns (entry, created).
 
-    Refuses if the user already has an active entry (no duplicates) or
-    an active registration (they don't need a waitlist spot).
+    Refuses if:
+    - the event isn't genuinely open for registration (draft, cancelled,
+      completed, or already started) — mirrors events.views.join_waitlist's
+      guard here too, so a direct call from anywhere else in the codebase
+      can't bypass it (defense in depth, not just a view-level check);
+    - the user already has an active entry (no duplicates); or
+    - the user already has an active registration (they don't need a
+      waitlist spot).
     """
+    if not event.is_registration_open:
+        return None, False
+
     if Registration.objects.filter(event=event, user=user, status='confirmed').exists():
         return None, False
 
@@ -83,6 +92,12 @@ def promote_next_waitlisted(event: Event):
     if event.is_full:
         return None
 
+    if not event.is_registration_open:
+        # Event was cancelled/completed (or somehow reverted to draft)
+        # since the seat opened up — don't keep notifying people about a
+        # seat they can no longer actually take.
+        return None
+
     entry = (
         WaitlistEntry.objects.filter(event=event, status=WaitlistEntry.STATUS_WAITING)
         .order_by('position', 'joined_at')
@@ -127,6 +142,14 @@ def claim_waitlist_seat(event: Event, user):
             entry.save(update_fields=['status'])
             _resequence(event)
             promote_next_waitlisted(event)
+        return None
+
+    if not event.is_registration_open:
+        # The invite is still live, but the event itself was
+        # cancelled/completed in the meantime — the seat can't be
+        # claimed. events.views.event_register also checks this before
+        # ever calling in here; this is the defense-in-depth copy for
+        # any other caller.
         return None
 
     if event.is_full:

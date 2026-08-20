@@ -92,7 +92,7 @@
             <div class="d-flex justify-content-between align-items-start">
               <div>
                 <p class="mb-0">{{ expense.description }}</p>
-                <p class="text-muted-custom mb-0 small">{{ expense.get_category_display }} · {{ expense.date }}{% if expense.receipt %} · <a href="{{ expense.receipt.url }}" target="_blank">Receipt</a>{% endif %}</p>
+                <p class="text-muted-custom mb-0 small">{{ expense.get_category_display }} · {{ expense.date }}{% if expense.receipt %} · <a href="{% url 'budget:expense_receipt_download' expense.pk %}">Receipt</a>{% endif %}</p>
               </div>
               <span>₹{{ expense.amount }}</span>
             </div>
